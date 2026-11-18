@@ -85,6 +85,39 @@ details.ex th{background:var(--teal)}
 .note{background:var(--ink);color:#fff;padding:24px 0;margin-top:20px}
 .note p{margin:0}
 footer{padding:30px 0;color:var(--muted);font-size:.9rem}
+
+/* component 2: student table */
+.panel{background:var(--card);border:2px solid var(--ink);border-radius:6px;padding:20px;margin-top:20px}
+.storage{background:var(--teal-soft);border-left:6px solid var(--teal);border-radius:4px;padding:14px 18px;margin:18px 0 0}
+.storage p{margin:0}
+.tools{display:flex;flex-wrap:wrap;gap:12px;align-items:end;margin-bottom:14px}
+.tools label,.fgrid label{display:flex;flex-direction:column;font-size:.9rem;font-weight:600;gap:4px}
+input,select{font:inherit;padding:8px 10px;border:2px solid var(--ink);border-radius:4px;background:#fff;color:var(--ink);min-width:0}
+input[readonly]{background:var(--paper);color:var(--muted)}
+input[aria-invalid="true"]{border-color:#B3261E}
+.tools .grow{flex:1 1 220px}
+.btn{font:inherit;font-weight:600;cursor:pointer;padding:9px 16px;border:2px solid var(--ink);border-radius:4px;background:var(--ink);color:#fff}
+.btn:hover{background:var(--teal);border-color:var(--teal)}
+.btn.alt{background:#fff;color:var(--ink)}
+.btn.alt:hover{background:var(--amber);border-color:var(--ink);color:var(--ink)}
+.btn.danger{background:#B3261E;border-color:#B3261E}
+.btn.sm{padding:4px 10px;font-size:.9rem}
+.count{font-weight:600;margin:0 0 10px}
+#stu th button{all:unset;cursor:pointer;display:flex;gap:6px;align-items:center;width:100%}
+#stu th button:focus-visible{outline:3px solid var(--amber)}
+#stu td.act{display:flex;gap:8px}
+.empty{text-align:center;color:var(--muted);padding:24px!important;white-space:normal!important}
+#form{display:none;background:var(--paper);border-radius:4px;padding:16px;margin-bottom:16px}
+#form.show{display:block}
+.fgrid{display:grid;grid-template-columns:140px 1fr 1fr;gap:12px}
+@media(max-width:700px){.fgrid{grid-template-columns:1fr}}
+.err{color:#B3261E;font-size:.85rem;font-weight:400;min-height:1.1em}
+.frow{display:flex;gap:10px;margin-top:12px}
+#msg{min-height:1.6em;font-weight:600;margin:10px 0 0}
+#msg.bad{color:#B3261E}
+dialog{border:2px solid var(--ink);border-radius:6px;padding:22px;max-width:420px;font:inherit}
+dialog::backdrop{background:rgba(27,42,58,.55)}
+dialog .frow{justify-content:flex-end}
 </style>
 </head>
 <body>
@@ -94,6 +127,7 @@ footer{padding:30px 0;color:var(--muted);font-size:.9rem}
     <span class="brand">Database Learning Lab</span>
     <nav aria-label="Main">
       <a href="#intro">Introduction</a>
+      <a href="#students">Student table</a>
       <!-- More links will be added as new components are built -->
     </nav>
   </div>
@@ -235,6 +269,77 @@ footer{padding:30px 0;color:var(--muted);font-size:.9rem}
   </div>
 </section>
 
+<!-- ============ COMPONENT 2: STUDENT TABLE ============ -->
+<section class="part" id="students">
+  <div class="wrap">
+    <h2>Interactive student database</h2>
+    <p>This table works like a small database. Each row is a record with three fields: Student ID, Name, and Major. Add, edit, delete, search, sort, and filter the records below.</p>
+    <div class="storage">
+      <p><b>How the data is stored:</b> this page starts with five sample students. Your changes are saved in your browser's <b>localStorage</b>, so they stay after you refresh the page. It is not a real database server, and the data stays on your own device. Use "Reset sample data" to start over.</p>
+    </div>
+
+    <div class="panel">
+      <div class="tools">
+        <label class="grow">Search by name, ID, or major
+          <input id="q" type="search" placeholder="Try &quot;data&quot; or &quot;003&quot;">
+        </label>
+        <label>Filter by major
+          <select id="fmajor"><option value="">All majors</option></select>
+        </label>
+        <button class="btn" id="addBtn" type="button">Add student</button>
+        <button class="btn alt" id="resetBtn" type="button">Reset sample data</button>
+      </div>
+
+      <form id="form" novalidate>
+        <h3 id="formTitle">Add student</h3>
+        <div class="fgrid">
+          <label>Student ID
+            <input id="fid" inputmode="numeric" maxlength="6" placeholder="006" autocomplete="off">
+            <span class="err" id="eid"></span>
+          </label>
+          <label>Name
+            <input id="fname" placeholder="First and last name" autocomplete="off">
+            <span class="err" id="ename"></span>
+          </label>
+          <label>Major
+            <input id="fmaj" list="majors" placeholder="e.g. Computer Science" autocomplete="off">
+            <span class="err" id="emaj"></span>
+          </label>
+        </div>
+        <datalist id="majors"></datalist>
+        <div class="frow">
+          <button class="btn" type="submit" id="saveBtn">Save student</button>
+          <button class="btn alt" type="button" id="cancelBtn">Cancel</button>
+        </div>
+      </form>
+
+      <p class="count" id="count" aria-live="polite"></p>
+      <div class="scroll">
+        <table id="stu">
+          <thead><tr>
+            <th aria-sort="ascending"><button type="button" data-k="id">Student ID <span class="ar"></span></button></th>
+            <th><button type="button" data-k="name">Name <span class="ar"></span></button></th>
+            <th><button type="button" data-k="major">Major <span class="ar"></span></button></th>
+            <th>Actions</th>
+          </tr></thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+      <p class="hint">Select a column heading to sort. Select it again to reverse the order. The Student ID is the primary key, so it must be unique and cannot be changed when editing.</p>
+      <p id="msg" role="status"></p>
+    </div>
+  </div>
+</section>
+
+<dialog id="dlg" aria-labelledby="dlgT">
+  <h3 id="dlgT">Delete this record?</h3>
+  <p id="dlgP"></p>
+  <div class="frow">
+    <button class="btn alt" type="button" id="dlgNo">Keep record</button>
+    <button class="btn danger" type="button" id="dlgYes">Delete record</button>
+  </div>
+</dialog>
+
 <!-- NEXT COMPONENTS GO HERE -->
 
 </main>
@@ -243,5 +348,123 @@ footer{padding:30px 0;color:var(--muted);font-size:.9rem}
   <div class="wrap">Database Learning Lab. Based on Chapter 10: Database.</div>
 </footer>
 
+<script>
+(function(){
+  var KEY="dbLab.students.v1";
+  var SAMPLE=[
+    {id:"001",name:"John Smith",major:"Computer Science"},
+    {id:"002",name:"Jane Doe",major:"Information Technology"},
+    {id:"003",name:"Michael Brown",major:"Data Science"},
+    {id:"004",name:"Emily Wilson",major:"Cybersecurity"},
+    {id:"005",name:"David Johnson",major:"Artificial Intelligence"}
+  ];
+  var $=function(i){return document.getElementById(i)};
+  var data=load(), sortKey="id", sortDir=1, editing=null, pendingDelete=null;
+
+  function load(){
+    try{var s=localStorage.getItem(KEY);if(s){var d=JSON.parse(s);if(Array.isArray(d))return d}}catch(e){}
+    return SAMPLE.map(function(r){return Object.assign({},r)});
+  }
+  function save(){try{localStorage.setItem(KEY,JSON.stringify(data))}catch(e){}}
+  function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
+  function say(t,bad){var m=$("msg");m.textContent=t;m.className=bad?"bad":""}
+
+  function majors(){
+    var l=[];data.forEach(function(r){if(l.indexOf(r.major)<0)l.push(r.major)});
+    return l.sort();
+  }
+  function refreshMajors(){
+    var cur=$("fmajor").value, list=majors();
+    $("fmajor").innerHTML='<option value="">All majors</option>'+list.map(function(m){return '<option>'+esc(m)+'</option>'}).join("");
+    $("fmajor").value=list.indexOf(cur)>=0?cur:"";
+    $("majors").innerHTML=list.map(function(m){return '<option value="'+esc(m)+'">'}).join("");
+  }
+
+  function render(){
+    refreshMajors();
+    var q=$("q").value.trim().toLowerCase(), fm=$("fmajor").value;
+    var list=data.filter(function(r){
+      if(fm&&r.major!==fm)return false;
+      return !q||(r.id+" "+r.name+" "+r.major).toLowerCase().indexOf(q)>=0;
+    });
+    list.sort(function(a,b){
+      var x=a[sortKey],y=b[sortKey];
+      return sortKey==="id"?(x.localeCompare(y,undefined,{numeric:true})*sortDir):(x.localeCompare(y)*sortDir);
+    });
+    $("rows").innerHTML=list.length?list.map(function(r){
+      return '<tr><td class="pk">'+esc(r.id)+'</td><td>'+esc(r.name)+'</td><td>'+esc(r.major)+'</td>'+
+        '<td class="act"><button class="btn alt sm" data-a="edit" data-id="'+esc(r.id)+'" aria-label="Edit '+esc(r.name)+'">Edit</button>'+
+        '<button class="btn alt sm" data-a="del" data-id="'+esc(r.id)+'" aria-label="Delete '+esc(r.name)+'">Delete</button></td></tr>';
+    }).join(""):'<tr><td colspan="4" class="empty">No students match. Clear the search or filter, or add a new student.</td></tr>';
+    $("count").textContent="Showing "+list.length+" of "+data.length+" student record"+(data.length===1?"":"s")+". Total records: "+data.length+".";
+    document.querySelectorAll("#stu th[data-k], #stu th").forEach(function(th){
+      var b=th.querySelector("button");if(!b)return;
+      var on=b.dataset.k===sortKey;
+      th.setAttribute("aria-sort",on?(sortDir===1?"ascending":"descending"):"none");
+      b.querySelector(".ar").textContent=on?(sortDir===1?"\u25B2":"\u25BC"):"";
+    });
+  }
+
+  function clearErrs(){["id","name","maj"].forEach(function(k){$("e"+k).textContent="";});
+    ["fid","fname","fmaj"].forEach(function(k){$(k).removeAttribute("aria-invalid")})}
+  function bad(field,errId,text){$(errId).textContent=text;$(field).setAttribute("aria-invalid","true");return false}
+
+  function validate(){
+    clearErrs();
+    var ok=true, id=$("fid").value.trim(), name=$("fname").value.trim().replace(/\s+/g," "), maj=$("fmaj").value.trim().replace(/\s+/g," ");
+    if(!/^\d{1,6}$/.test(id))ok=bad("fid","eid","Use 1 to 6 digits, like 006.");
+    else if(editing===null&&data.some(function(r){return r.id===id}))ok=bad("fid","eid","ID "+id+" already exists. Choose a different ID.");
+    if(name.length<2||!/^[A-Za-z][A-Za-z .'\-]*$/.test(name))ok=bad("fname","ename","Enter a name using letters, spaces, hyphens, or apostrophes.");
+    if(maj.length<2||maj.length>40)ok=bad("fmaj","emaj","Enter a major (2 to 40 characters).");
+    return ok?{id:id,name:name,major:maj}:null;
+  }
+
+  function openForm(rec){
+    editing=rec?rec.id:null;
+    $("formTitle").textContent=rec?"Edit student":"Add student";
+    $("fid").value=rec?rec.id:"";$("fname").value=rec?rec.name:"";$("fmaj").value=rec?rec.major:"";
+    $("fid").readOnly=!!rec;
+    clearErrs();$("form").classList.add("show");
+    (rec?$("fname"):$("fid")).focus();
+    $("form").scrollIntoView({block:"nearest"});
+  }
+  function closeForm(){$("form").classList.remove("show");editing=null}
+
+  $("addBtn").onclick=function(){openForm(null)};
+  $("cancelBtn").onclick=closeForm;
+  $("form").onsubmit=function(e){
+    e.preventDefault();
+    var rec=validate();if(!rec)return;
+    if(editing===null){data.push(rec);say("Added "+rec.name+" (ID "+rec.id+").")}
+    else{data=data.map(function(r){return r.id===editing?rec:r});say("Updated "+rec.name+" (ID "+rec.id+").")}
+    save();closeForm();render();
+  };
+  $("q").oninput=render;$("fmajor").onchange=render;
+  $("resetBtn").onclick=function(){
+    data=SAMPLE.map(function(r){return Object.assign({},r)});save();closeForm();
+    $("q").value="";$("fmajor").value="";render();say("Sample data restored.");
+  };
+  document.querySelectorAll("#stu th button").forEach(function(b){
+    b.onclick=function(){
+      if(sortKey===b.dataset.k)sortDir*=-1;else{sortKey=b.dataset.k;sortDir=1}
+      render();
+    };
+  });
+  $("rows").onclick=function(e){
+    var b=e.target.closest("button");if(!b)return;
+    var rec=data.filter(function(r){return r.id===b.dataset.id})[0];if(!rec)return;
+    if(b.dataset.a==="edit")openForm(rec);
+    else{pendingDelete=rec;$("dlgP").textContent="This will permanently remove "+rec.name+" (ID "+rec.id+", "+rec.major+").";$("dlg").showModal()}
+  };
+  $("dlgNo").onclick=function(){pendingDelete=null;$("dlg").close()};
+  $("dlgYes").onclick=function(){
+    if(pendingDelete){data=data.filter(function(r){return r.id!==pendingDelete.id});save();
+      say("Deleted "+pendingDelete.name+" (ID "+pendingDelete.id+").");
+      if(editing===pendingDelete.id)closeForm();pendingDelete=null;render()}
+    $("dlg").close();
+  };
+  render();
+})();
+</script>
 </body>
 </html>
