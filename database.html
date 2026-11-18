@@ -118,6 +118,27 @@ input[aria-invalid="true"]{border-color:#B3261E}
 dialog{border:2px solid var(--ink);border-radius:6px;padding:22px;max-width:420px;font:inherit}
 dialog::backdrop{background:rgba(27,42,58,.55)}
 dialog .frow{justify-content:flex-end}
+
+/* component 3: structure and relationships */
+.concepts{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;margin:18px 0 8px}
+.concept{background:var(--card);border-top:6px solid var(--teal);border-radius:4px;padding:16px 18px}
+.concept:nth-child(even){border-top-color:var(--amber)}
+.concept h3{font-size:1.15rem;margin-bottom:.3em}
+.concept p{font-size:.98rem;margin:0}
+.rel{display:grid;grid-template-columns:1.25fr 1fr;gap:20px;align-items:start}
+@media(max-width:820px){.rel{grid-template-columns:1fr}}
+.rel table tbody tr{cursor:pointer}
+.rel tbody tr.on td{background:var(--amber)}
+.rel td.fk{font-weight:600;color:#9A5B00}
+.rel caption{text-align:left;font-family:var(--head);font-weight:600;padding-bottom:6px}
+.rel .tablebox{box-shadow:4px 4px 0 var(--ink)}
+.keylegend{display:flex;flex-wrap:wrap;gap:16px;margin:12px 0 0;font-size:.95rem}
+.keylegend span::before{content:"";display:inline-block;width:12px;height:12px;border-radius:2px;margin-right:6px;vertical-align:-1px}
+.keylegend .k1::before{background:var(--teal)}
+.keylegend .k2::before{background:#9A5B00}
+.reltypes{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:12px}
+.reltypes div{background:var(--teal-soft);border-radius:4px;padding:12px 14px;font-size:.96rem}
+.reltypes b{display:block;font-family:var(--head)}
 </style>
 </head>
 <body>
@@ -128,6 +149,7 @@ dialog .frow{justify-content:flex-end}
     <nav aria-label="Main">
       <a href="#intro">Introduction</a>
       <a href="#students">Student table</a>
+      <a href="#structure">Structure</a>
       <!-- More links will be added as new components are built -->
     </nav>
   </div>
@@ -339,6 +361,123 @@ dialog .frow{justify-content:flex-end}
     <button class="btn danger" type="button" id="dlgYes">Delete record</button>
   </div>
 </dialog>
+
+<!-- ============ COMPONENT 3: STRUCTURE AND RELATIONSHIPS ============ -->
+<section class="part" id="structure">
+  <div class="wrap">
+    <h2>Database structure and relationships</h2>
+    <p>A database stores more than one list. It splits information into separate tables and connects them. These six ideas explain how.</p>
+
+    <div class="concepts">
+      <div class="concept"><h3>Tables</h3><p>A table holds data about one kind of thing. A student database might have a Students table and a Majors table.</p></div>
+      <div class="concept"><h3>Rows and columns</h3><p>Rows run across the table and columns run down it. Together they form a grid, like a spreadsheet.</p></div>
+      <div class="concept"><h3>Records and fields</h3><p>A record is one row: everything about one student. A field is one column: one kind of fact, such as Name.</p></div>
+      <div class="concept"><h3>Primary key</h3><p>A field that gives every record a unique identity. Student ID is the primary key of Students. No two students can share it, and it can never be empty.</p></div>
+      <div class="concept"><h3>Foreign key</h3><p>A field that holds the primary key of a record in another table. Major ID in Students is a foreign key that points into Majors.</p></div>
+      <div class="concept"><h3>Relationships</h3><p>A relationship is the link between two tables, made by matching a foreign key to a primary key.</p></div>
+    </div>
+
+    <article class="q" style="margin-top:28px">
+      <h3>Two related tables</h3>
+      <p>Instead of typing "Computer Science" next to every student, the Students table stores a short code, the Major ID. The full name lives once in the Majors table. <b>Select a student row</b> to see which major it points to.</p>
+      <div class="rel">
+        <div class="tablebox">
+          <div class="scroll">
+            <table id="tStu">
+              <caption>Students table</caption>
+              <thead><tr><th>Student ID <small>(PK)</small></th><th>Name</th><th>Major ID <small>(FK)</small></th></tr></thead>
+              <tbody>
+                <tr data-m="CS01" tabindex="0"><td class="pk">001</td><td>John Smith</td><td class="fk">CS01</td></tr>
+                <tr data-m="IT01" tabindex="0"><td class="pk">002</td><td>Jane Doe</td><td class="fk">IT01</td></tr>
+                <tr data-m="DS01" tabindex="0"><td class="pk">003</td><td>Michael Brown</td><td class="fk">DS01</td></tr>
+                <tr data-m="CS01" tabindex="0"><td class="pk">004</td><td>Sara Lopez</td><td class="fk">CS01</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="tablebox">
+          <div class="scroll">
+            <table id="tMaj">
+              <caption>Majors table</caption>
+              <thead><tr><th>Major ID <small>(PK)</small></th><th>Major Name</th></tr></thead>
+              <tbody>
+                <tr data-m="CS01"><td class="pk">CS01</td><td>Computer Science</td></tr>
+                <tr data-m="IT01"><td class="pk">IT01</td><td>Information Technology</td></tr>
+                <tr data-m="DS01"><td class="pk">DS01</td><td>Data Science</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div class="keylegend"><span class="k1">PK = primary key (unique in its own table)</span><span class="k2">FK = foreign key (points to another table)</span></div>
+      <p id="relOut" class="hint" aria-live="polite">Select a student to follow the link.</p>
+      <p><b>How Major ID connects the tables:</b> the Major ID in each student row matches exactly one Major ID in the Majors table. John Smith has CS01, so the database looks up CS01 in Majors and finds Computer Science. If the school renames that major, you change one row in Majors and every student is updated automatically.</p>
+      <p class="hint">Sara Lopez is an extra example, added so you can see two students sharing one major.</p>
+    </article>
+
+    <article class="q alt">
+      <h3>One-to-many relationship: majors and students</h3>
+      <p>One major can have many students, but each student here belongs to only one major. The "one" side is Majors, and the "many" side is Students. The foreign key always sits on the "many" side.</p>
+      <div class="diagram">
+        <svg viewBox="0 0 760 340" role="img" aria-label="Diagram: CS01 Computer Science links to John Smith and Sara Lopez. IT01 links to Jane Doe. DS01 links to Michael Brown. Each major connects to many students.">
+          <text class="t" x="20" y="18">Majors (one)</text>
+          <text class="t" x="500" y="18">Students (many)</text>
+          <g transform="translate(0,28)" stroke="#1B2A3A" stroke-width="2" fill="none">
+            <!-- lines -->
+            <path d="M230 56 L472 28 M230 56 L472 84 M230 160 L472 160 M230 254 L472 254"/>
+            <!-- crow's feet -->
+            <path d="M472 28 L500 19 M472 28 L500 28 M472 28 L500 37 M472 84 L500 75 M472 84 L500 84 M472 84 L500 93 M472 160 L500 151 M472 160 L500 160 M472 160 L500 169 M472 254 L500 245 M472 254 L500 254 M472 254 L500 263"/>
+            <!-- one ticks -->
+            <path d="M244 44 V68 M244 148 V172 M244 242 V266"/>
+            <!-- boxes -->
+            <rect x="20" y="28" width="210" height="56" rx="6" fill="#0F7C8A"/>
+            <rect x="20" y="132" width="210" height="56" rx="6" fill="#0F7C8A"/>
+            <rect x="20" y="226" width="210" height="56" rx="6" fill="#0F7C8A"/>
+            <rect x="500" y="6" width="240" height="44" rx="6" fill="#fff"/>
+            <rect x="500" y="62" width="240" height="44" rx="6" fill="#fff"/>
+            <rect x="500" y="138" width="240" height="44" rx="6" fill="#fff"/>
+            <rect x="500" y="232" width="240" height="44" rx="6" fill="#fff"/>
+          </g>
+          <g stroke="none" transform="translate(0,28)">
+            <text x="125" y="52" text-anchor="middle" style="fill:#fff" class="t">CS01</text><text x="125" y="72" text-anchor="middle" style="fill:#fff">Computer Science</text>
+            <text x="125" y="156" text-anchor="middle" style="fill:#fff" class="t">IT01</text><text x="125" y="176" text-anchor="middle" style="fill:#fff">Information Technology</text>
+            <text x="125" y="250" text-anchor="middle" style="fill:#fff" class="t">DS01</text><text x="125" y="270" text-anchor="middle" style="fill:#fff">Data Science</text>
+            <text x="620" y="33" text-anchor="middle">001 John Smith (CS01)</text>
+            <text x="620" y="89" text-anchor="middle">004 Sara Lopez (CS01)</text>
+            <text x="620" y="165" text-anchor="middle">002 Jane Doe (IT01)</text>
+            <text x="620" y="259" text-anchor="middle">003 Michael Brown (DS01)</text>
+            <text x="258" y="48">1</text><text x="258" y="152">1</text><text x="258" y="246">1</text>
+          </g>
+        </svg>
+      </div>
+      <p class="hint">The single bar means "one". The three-pronged end (a crow's foot) means "many".</p>
+      <h3 style="margin-top:18px">Other relationship types</h3>
+      <div class="reltypes">
+        <div><b>One-to-one</b>One record matches exactly one record, such as a student and their single student ID card.</div>
+        <div><b>One-to-many</b>One record matches many, such as one major with many students.</div>
+        <div><b>Many-to-many</b>Many match many, such as students and courses. It needs a third "link" table, such as Enrollments.</div>
+      </div>
+    </article>
+  </div>
+</section>
+
+<script>
+(function(){
+  var rows=document.querySelectorAll("#tStu tbody tr"), maj=document.querySelectorAll("#tMaj tbody tr"), out=document.getElementById("relOut");
+  function pick(r){
+    var id=r.getAttribute("data-m");
+    rows.forEach(function(x){x.classList.toggle("on",x===r)});
+    var name="";
+    maj.forEach(function(m){var hit=m.getAttribute("data-m")===id;m.classList.toggle("on",hit);if(hit)name=m.cells[1].textContent});
+    out.textContent=r.cells[1].textContent+" has Major ID "+id+", which matches "+name+" in the Majors table.";
+  }
+  rows.forEach(function(r){
+    r.addEventListener("click",function(){pick(r)});
+    r.addEventListener("focus",function(){pick(r)});
+    r.addEventListener("keydown",function(e){if(e.key==="Enter"||e.key===" "){e.preventDefault();pick(r)}});
+  });
+})();
+</script>
 
 <!-- NEXT COMPONENTS GO HERE -->
 
