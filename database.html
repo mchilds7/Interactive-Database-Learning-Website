@@ -139,6 +139,26 @@ dialog .frow{justify-content:flex-end}
 .reltypes{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:12px}
 .reltypes div{background:var(--teal-soft);border-radius:4px;padding:12px 14px;font-size:.96rem}
 .reltypes b{display:block;font-family:var(--head)}
+
+/* component 4: SQL demo */
+code,pre,textarea.sql{font-family:Consolas,Menlo,"Courier New",monospace}
+.refs code{display:block;background:var(--ink);color:#fff;border-radius:4px;padding:8px 10px;margin-top:10px;font-size:.82rem;line-height:1.5;white-space:pre-wrap}
+.sqlgrid{display:grid;grid-template-columns:260px 1fr;gap:20px;align-items:start}
+@media(max-width:820px){.sqlgrid{grid-template-columns:1fr}}
+.exlist{display:flex;flex-direction:column;gap:6px}
+.exlist button{font:inherit;text-align:left;cursor:pointer;padding:8px 10px;border:2px solid var(--ink);border-radius:4px;background:#fff;color:var(--ink)}
+.exlist button small{display:block;color:var(--muted);font-size:.8rem}
+.exlist button:hover{background:var(--teal-soft)}
+.exlist button[aria-pressed="true"]{background:var(--ink);color:#fff}
+.exlist button[aria-pressed="true"] small{color:#D5ECEF}
+textarea.sql{width:100%;min-height:130px;background:var(--ink);color:#fff;border:2px solid var(--ink);border-radius:4px;padding:12px;font-size:.95rem;line-height:1.5;resize:vertical}
+.exinfo h3{margin-bottom:.2em}
+.exinfo p{margin:0 0 .6em}
+.expected{background:var(--teal-soft);border-radius:4px;padding:8px 12px;font-size:.95rem;margin:10px 0}
+#sqlOut{margin-top:12px;border-top:2px solid var(--line);padding-top:12px;min-height:3em}
+#sqlOut .res{font-weight:600;margin:0 0 8px}
+#sqlOut .res.bad{color:#B3261E}
+#sqlOut .tname{font-size:.9rem;color:var(--muted);margin:0 0 6px}
 </style>
 </head>
 <body>
@@ -150,6 +170,7 @@ dialog .frow{justify-content:flex-end}
       <a href="#intro">Introduction</a>
       <a href="#students">Student table</a>
       <a href="#structure">Structure</a>
+      <a href="#sql">SQL</a>
       <!-- More links will be added as new components are built -->
     </nav>
   </div>
@@ -476,6 +497,312 @@ dialog .frow{justify-content:flex-end}
     r.addEventListener("focus",function(){pick(r)});
     r.addEventListener("keydown",function(e){if(e.key==="Enter"||e.key===" "){e.preventDefault();pick(r)}});
   });
+})();
+</script>
+
+<!-- ============ COMPONENT 4: SQL DEMONSTRATION ============ -->
+<section class="part" id="sql">
+  <div class="wrap">
+    <h2>Interactive SQL demonstration</h2>
+    <p><b>SQL</b> (Structured Query Language) is the language used to talk to a relational database. You write a short statement that says what you want, and the DBMS figures out how to do it. These seven pieces cover most everyday database work.</p>
+
+    <div class="concepts refs">
+      <div class="concept"><h3>CREATE TABLE</h3><p>Builds a new table and defines its columns.</p><code>CREATE TABLE Courses (
+  CourseID VARCHAR(6) PRIMARY KEY,
+  Title VARCHAR(40));</code></div>
+      <div class="concept"><h3>INSERT INTO</h3><p>Adds new records to a table.</p><code>INSERT INTO Students
+VALUES ('006', 'Sara Lopez',
+  'Computer Science');</code></div>
+      <div class="concept"><h3>SELECT</h3><p>Retrieves records without changing them.</p><code>SELECT Name, Major
+FROM Students;</code></div>
+      <div class="concept"><h3>UPDATE</h3><p>Changes values in records that already exist.</p><code>UPDATE Students
+SET Major = 'Data Science'
+WHERE StudentID = '001';</code></div>
+      <div class="concept"><h3>DELETE</h3><p>Removes records from a table.</p><code>DELETE FROM Students
+WHERE StudentID = '005';</code></div>
+      <div class="concept"><h3>WHERE</h3><p>Filters which records a command applies to.</p><code>SELECT * FROM Students
+WHERE Major = 'Cybersecurity';</code></div>
+      <div class="concept"><h3>ORDER BY</h3><p>Sorts the results, ASC (A to Z) or DESC (Z to A).</p><code>SELECT * FROM Students
+ORDER BY Name DESC;</code></div>
+    </div>
+
+    <div class="storage">
+      <p><b>How this demo works:</b> it is a <b>simulated SQL environment</b>. A small SQL interpreter written in JavaScript runs in your browser against a practice copy of the Students data. It is not a real database server like MySQL, and it does not change the table in the previous sections. Pick an example, or edit the SQL and write your own, then select Run.</p>
+    </div>
+
+    <div class="panel">
+      <div class="sqlgrid">
+        <div>
+          <h3>Examples</h3>
+          <div class="exlist" id="exlist"></div>
+        </div>
+        <div>
+          <div class="exinfo" id="exinfo" aria-live="polite"></div>
+          <label for="sqlIn" style="font-weight:600;font-size:.9rem">SQL statement (you can edit it)</label>
+          <textarea id="sqlIn" class="sql" spellcheck="false"></textarea>
+          <div class="frow">
+            <button class="btn" type="button" id="runBtn">Run SQL</button>
+            <button class="btn alt" type="button" id="sqlReset">Reset practice data</button>
+          </div>
+          <div class="expected" id="expected"></div>
+          <div id="sqlOut" role="status" aria-live="polite"><p class="hint">Output appears here after you run a statement.</p></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+(function(){
+  var $=function(i){return document.getElementById(i)};
+  function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
+  function E(m){return {sql:m}}
+
+  /* ---------- practice database ---------- */
+  var db;
+  function fresh(){
+    db={Students:{name:"Students",cols:[{n:"StudentID",t:"VARCHAR",pk:true},{n:"Name",t:"VARCHAR"},{n:"Major",t:"VARCHAR"}],rows:[
+      {StudentID:"001",Name:"John Smith",Major:"Computer Science"},
+      {StudentID:"002",Name:"Jane Doe",Major:"Information Technology"},
+      {StudentID:"003",Name:"Michael Brown",Major:"Data Science"},
+      {StudentID:"004",Name:"Emily Wilson",Major:"Cybersecurity"},
+      {StudentID:"005",Name:"David Johnson",Major:"Artificial Intelligence"}]}};
+  }
+  fresh();
+
+  /* ---------- tokenizer ---------- */
+  function tokenize(s){
+    var out=[],i=0,re=/'(?:[^']|'')*'|[A-Za-z_][A-Za-z0-9_]*|-?\d+(?:\.\d+)?|<=|>=|<>|!=|[(),*=<>;]/y;
+    while(i<s.length){
+      if(/\s/.test(s[i])){i++;continue}
+      re.lastIndex=i;var m=re.exec(s);
+      if(!m)throw E("Unexpected character "+s[i]+". Text values need single quotes, like 'Data Science'.");
+      out.push(m[0]);i=re.lastIndex;
+    }
+    return out;
+  }
+
+  /* ---------- parser and executor ---------- */
+  var p;
+  function near(){return p.t[p.i]===undefined?"the end of the statement":"'"+p.t[p.i]+"'"}
+  function isKw(w){var t=p.t[p.i];return t!==undefined&&t.toUpperCase()===w}
+  function eatKw(w){if(isKw(w)){p.i++;return true}return false}
+  function needKw(w){if(!eatKw(w))throw E("Expected "+w+" near "+near()+".")}
+  function eat(x){if(p.t[p.i]===x){p.i++;return true}return false}
+  function need(x){if(!eat(x))throw E("Expected "+x+" near "+near()+".")}
+  function ident(){var t=p.t[p.i];if(!t||!/^[A-Za-z_]/.test(t))throw E("Expected a name near "+near()+".");p.i++;return t}
+  function value(){
+    var t=p.t[p.i];if(t===undefined)throw E("Expected a value at the end of the statement.");p.i++;
+    if(t[0]==="'")return t.slice(1,-1).replace(/''/g,"'");
+    if(/^-?\d/.test(t))return Number(t);
+    if(t.toUpperCase()==="NULL")return null;
+    throw E("Expected a value near '"+t+"'. Text values need single quotes.");
+  }
+  function getTable(n){
+    for(var k in db)if(k.toLowerCase()===n.toLowerCase())return db[k];
+    throw E("Table "+n+" does not exist. Check the spelling, or run the CREATE TABLE example first.");
+  }
+  function colName(tbl,n){
+    for(var i=0;i<tbl.cols.length;i++)if(tbl.cols[i].n.toLowerCase()===n.toLowerCase())return tbl.cols[i];
+    throw E("Column "+n+" does not exist in "+tbl.name+". Columns are: "+tbl.cols.map(function(c){return c.n}).join(", ")+".");
+  }
+  function cmp(a,b){
+    if(typeof a==="number"||typeof b==="number"){var x=Number(a),y=Number(b);if(!isNaN(x)&&!isNaN(y))return x<y?-1:x>y?1:0}
+    a=String(a);b=String(b);return a<b?-1:a>b?1:0;
+  }
+  function parseWhere(tbl){
+    function one(){
+      var c=colName(tbl,ident()),f;
+      if(eatKw("LIKE")){
+        var pat=String(value()).replace(/[.*+?^${}()|[\]\\]/g,"\\$&").replace(/%/g,".*").replace(/_/g,".");
+        var re=new RegExp("^"+pat+"$","i");f=function(r){return re.test(String(r[c.n]))};
+      }else{
+        var op=p.t[p.i];
+        if(["=","!=","<>","<",">","<=",">="].indexOf(op)<0)throw E("Expected a comparison like = or > near "+near()+".");
+        p.i++;var v=value();
+        f=function(r){var d=cmp(r[c.n],v);
+          return op==="="?d===0:(op==="!="||op==="<>")?d!==0:op==="<"?d<0:op===">"?d>0:op==="<="?d<=0:d>=0};
+      }
+      return f;
+    }
+    function and(){var f=one();while(eatKw("AND")){var g=one();f=(function(a,b){return function(r){return a(r)&&b(r)}})(f,g)}return f}
+    var f=and();
+    while(eatKw("OR")){var g=and();f=(function(a,b){return function(r){return a(r)||b(r)}})(f,g)}
+    return f;
+  }
+  function coerce(c,v){
+    if(v===null)return null;
+    if(c.t.toUpperCase()==="INT"){if(typeof v!=="number"||v%1!==0)throw E("Column "+c.n+" expects a whole number, but got '"+v+"'.");return v}
+    return String(v);
+  }
+  function checkPK(tbl,rows){
+    var pk=tbl.cols.filter(function(c){return c.pk})[0];if(!pk)return;
+    var seen={};
+    rows.forEach(function(r){
+      var v=r[pk.n];
+      if(v===null||v==="")throw E(pk.n+" is the primary key and cannot be empty.");
+      if(seen[v])throw E("Duplicate primary key: "+pk.n+" "+v+" already exists, so the change was not made.");
+      seen[v]=1;
+    });
+  }
+  function plural(n,w){return n+" "+w+(n===1?"":"s")}
+
+  function run(sql){
+    p={t:tokenize(sql),i:0};
+    while(p.t.length&&p.t[p.t.length-1]===";")p.t.pop();
+    if(!p.t.length)throw E("Type a SQL statement first.");
+    if(p.t.indexOf(";")>=0)throw E("Run one statement at a time.");
+    var kw=p.t[0].toUpperCase(),res;p.i=1;
+    if(kw==="CREATE"){
+      needKw("TABLE");var name=ident();
+      for(var k in db)if(k.toLowerCase()===name.toLowerCase())throw E("Table "+name+" already exists. Use Reset practice data to start over.");
+      need("(");var cols=[];
+      do{
+        var cn=ident(),ct=ident(),pk=false;
+        if(eat("(")){value();need(")")}
+        if(eatKw("PRIMARY")){needKw("KEY");pk=true}
+        cols.push({n:cn,t:ct,pk:pk});
+      }while(eat(","));
+      need(")");
+      var seenC={};cols.forEach(function(c){if(seenC[c.n.toLowerCase()])throw E("Column "+c.n+" is listed twice.");seenC[c.n.toLowerCase()]=1});
+      db[name]={name:name,cols:cols,rows:[]};
+      res={msg:"Table "+name+" created with "+plural(cols.length,"column")+". It has no rows yet.",table:db[name]};
+    }else if(kw==="INSERT"){
+      needKw("INTO");var t=getTable(ident()),cl=t.cols;
+      if(eat("(")){cl=[];do{cl.push(colName(t,ident()))}while(eat(","));need(")")}
+      needKw("VALUES");var add=[];
+      do{
+        need("(");var vals=[];do{vals.push(value())}while(eat(","));need(")");
+        if(vals.length!==cl.length)throw E("You gave "+plural(vals.length,"value")+" but "+plural(cl.length,"column")+" are expected.");
+        var row={};t.cols.forEach(function(c){row[c.n]=null});
+        cl.forEach(function(c,j){row[c.n]=coerce(c,vals[j])});
+        add.push(row);
+      }while(eat(","));
+      checkPK(t,t.rows.concat(add));
+      t.rows=t.rows.concat(add);
+      res={msg:plural(add.length,"row")+" inserted into "+t.name+".",table:t};
+    }else if(kw==="SELECT"){
+      var names=[],star=false;
+      if(eat("*"))star=true;else{do{names.push(ident())}while(eat(","))}
+      needKw("FROM");var st=getTable(ident());
+      var sc=star?st.cols:names.map(function(n){return colName(st,n)});
+      var f=null;if(eatKw("WHERE"))f=parseWhere(st);
+      var ob=null,dir=1;
+      if(eatKw("ORDER")){needKw("BY");ob=colName(st,ident());if(eatKw("DESC"))dir=-1;else eatKw("ASC")}
+      var rows=st.rows.filter(function(r){return f?f(r):true});
+      if(ob)rows=rows.slice().sort(function(a,b){return cmp(a[ob.n],b[ob.n])*dir});
+      res={msg:plural(rows.length,"row")+" returned.",cols:sc,rows:rows};
+    }else if(kw==="UPDATE"){
+      var ut=getTable(ident());needKw("SET");var sets=[];
+      do{var uc=colName(ut,ident());need("=");sets.push([uc,coerce(uc,value())])}while(eat(","));
+      var uf=null;if(eatKw("WHERE"))uf=parseWhere(ut);
+      var n=0,newRows=ut.rows.map(function(r){
+        if(uf&&!uf(r))return r;
+        n++;var c=Object.assign({},r);sets.forEach(function(s){c[s[0].n]=s[1]});return c;
+      });
+      checkPK(ut,newRows);ut.rows=newRows;
+      res={msg:plural(n,"row")+" updated in "+ut.name+"."+(uf?"":" There was no WHERE, so every row changed."),table:ut};
+    }else if(kw==="DELETE"){
+      needKw("FROM");var dt=getTable(ident());
+      var df=null;if(eatKw("WHERE"))df=parseWhere(dt);
+      var before=dt.rows.length;
+      dt.rows=df?dt.rows.filter(function(r){return !df(r)}):[];
+      res={msg:plural(before-dt.rows.length,"row")+" deleted from "+dt.name+"."+(df?"":" There was no WHERE, so every row was removed."),table:dt};
+    }else{
+      throw E("This demo supports CREATE TABLE, INSERT INTO, SELECT, UPDATE, DELETE, WHERE, and ORDER BY. '"+p.t[0]+"' is not one of them.");
+    }
+    if(p.i<p.t.length)throw E("Unexpected "+near()+". Check the statement for extra words.");
+    return res;
+  }
+
+  /* ---------- examples ---------- */
+  var EX=[
+    {tag:"CREATE TABLE",title:"Create a Courses table",
+     sql:"CREATE TABLE Courses (\n  CourseID VARCHAR(6) PRIMARY KEY,\n  Title VARCHAR(40),\n  Credits INT\n);",
+     what:"Builds a new, empty table named Courses with three columns. CourseID is the primary key, so every course needs a unique ID.",
+     exp:"A message that the table was created with 3 columns and no rows."},
+    {tag:"INSERT INTO",title:"Add three courses",
+     sql:"INSERT INTO Courses (CourseID, Title, Credits)\nVALUES ('CS101', 'Intro to Programming', 3),\n       ('DS200', 'Data Analysis', 4),\n       ('SEC210', 'Network Security', 3);",
+     what:"Adds three records to Courses. Run the CREATE TABLE example first, because the table must exist before it can hold data.",
+     exp:"A message that 3 rows were inserted, then the Courses table with those 3 rows."},
+    {tag:"INSERT INTO",title:"Add a new student",
+     sql:"INSERT INTO Students\nVALUES ('006', 'Sara Lopez', 'Computer Science');",
+     what:"Adds one record to Students. Values are listed in the same order as the table's columns. Run it twice to see the primary key stop a duplicate ID.",
+     exp:"1 row inserted. Students now has 6 rows, ending with Sara Lopez."},
+    {tag:"SELECT",title:"Get every student",
+     sql:"SELECT * FROM Students;",
+     what:"Retrieves all records and all columns from the Students table. The * means all columns.",
+     exp:"All students with all three columns (5 rows if you have not changed the data)."},
+    {tag:"SELECT",title:"Choose specific columns",
+     sql:"SELECT Name, Major\nFROM Students;",
+     what:"Retrieves only the Name and Major columns, leaving out StudentID.",
+     exp:"Every student, but only two columns: Name and Major."},
+    {tag:"WHERE",title:"Filter by major",
+     sql:"SELECT * FROM Students\nWHERE Major = 'Computer Science';",
+     what:"Retrieves only the students whose Major is Computer Science. WHERE keeps the rows that pass the condition.",
+     exp:"Only Computer Science students. With the original data, that is John Smith."},
+    {tag:"WHERE",title:"Match part of a name",
+     sql:"SELECT * FROM Students\nWHERE Name LIKE 'J%';",
+     what:"LIKE matches a pattern. The % stands for any characters, so 'J%' means names that start with J.",
+     exp:"John Smith and Jane Doe."},
+    {tag:"ORDER BY",title:"Sort names A to Z",
+     sql:"SELECT * FROM Students\nORDER BY Name ASC;",
+     what:"Sorts the results by Name in ascending order. Use DESC for Z to A.",
+     exp:"David Johnson, Emily Wilson, Jane Doe, John Smith, Michael Brown."},
+    {tag:"WHERE + ORDER BY",title:"Filter, then sort",
+     sql:"SELECT Name, Major FROM Students\nWHERE StudentID > '002'\nORDER BY Name DESC;",
+     what:"Keeps students with an ID above 002, then sorts them Z to A. WHERE always runs first, then ORDER BY sorts what is left.",
+     exp:"Michael Brown, Emily Wilson, David Johnson (Name and Major only)."},
+    {tag:"UPDATE",title:"Change a student's major",
+     sql:"UPDATE Students\nSET Major = 'Data Science'\nWHERE StudentID = '001';",
+     what:"Changes the Major of student 001. Without the WHERE, every student's major would change.",
+     exp:"1 row updated. John Smith's Major becomes Data Science."},
+    {tag:"DELETE",title:"Remove a student",
+     sql:"DELETE FROM Students\nWHERE StudentID = '005';",
+     what:"Removes the record for student 005. Without the WHERE, every record in the table would be deleted.",
+     exp:"1 row deleted. David Johnson is gone from the table."}
+  ];
+
+  var list=$("exlist");
+  EX.forEach(function(x,i){
+    var b=document.createElement("button");b.type="button";
+    b.innerHTML=esc(x.title)+"<small>"+esc(x.tag)+"</small>";
+    b.setAttribute("aria-pressed","false");
+    b.onclick=function(){pick(i)};
+    list.appendChild(b);
+  });
+  function pick(i){
+    var x=EX[i];
+    Array.prototype.forEach.call(list.children,function(b,j){b.setAttribute("aria-pressed",j===i?"true":"false")});
+    $("exinfo").innerHTML="<h3>"+esc(x.title)+"</h3><p><b>"+esc(x.tag)+":</b> "+esc(x.what)+"</p>";
+    $("sqlIn").value=x.sql;
+    $("expected").innerHTML="<b>Expected output:</b> "+esc(x.exp);
+    $("sqlOut").innerHTML='<p class="hint">Select Run SQL to see the output.</p>';
+  }
+
+  function tableHTML(cols,rows){
+    if(!rows.length)return '<p class="hint">This table has no rows.</p>';
+    return '<div class="scroll"><table><thead><tr>'+cols.map(function(c){return "<th>"+esc(c.n)+"</th>"}).join("")+
+      "</tr></thead><tbody>"+rows.map(function(r){return "<tr>"+cols.map(function(c){
+        var v=r[c.n];return "<td>"+(v===null?"<i>NULL</i>":esc(v))+"</td>"}).join("")+"</tr>"}).join("")+"</tbody></table></div>";
+  }
+  function runIt(){
+    var out=$("sqlOut");
+    try{
+      var r=run($("sqlIn").value);
+      var h='<p class="res">'+esc(r.msg)+"</p>";
+      if(r.table){h+='<p class="tname">Table '+esc(r.table.name)+" now:</p>"+tableHTML(r.table.cols,r.table.rows)}
+      else h+=tableHTML(r.cols,r.rows);
+      out.innerHTML=h;
+    }catch(e){
+      if(!e||!e.sql)throw e;
+      out.innerHTML='<p class="res bad">Error: '+esc(e.sql)+"</p>";
+    }
+  }
+  $("runBtn").onclick=runIt;
+  $("sqlIn").addEventListener("keydown",function(e){if((e.ctrlKey||e.metaKey)&&e.key==="Enter"){e.preventDefault();runIt()}});
+  $("sqlReset").onclick=function(){fresh();$("sqlOut").innerHTML='<p class="res">Practice data reset. Students has 5 rows and the Courses table is removed.</p>'};
+  pick(3);
 })();
 </script>
 
