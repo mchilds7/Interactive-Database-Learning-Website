@@ -159,7 +159,28 @@ textarea.sql{width:100%;min-height:130px;background:var(--ink);color:#fff;border
 #sqlOut .res{font-weight:600;margin:0 0 8px}
 #sqlOut .res.bad{color:#B3261E}
 #sqlOut .tname{font-size:.9rem;color:var(--muted);margin:0 0 6px}
+
+/* component 5: database types */
+.tabs{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0 0}
+.tabs button{font:inherit;font-family:var(--head);font-weight:600;cursor:pointer;padding:10px 16px;border:2px solid var(--ink);border-bottom:none;border-radius:6px 6px 0 0;background:#fff;color:var(--ink)}
+.tabs button:hover{background:var(--teal-soft)}
+.tabs button[aria-selected="true"]{background:var(--ink);color:#fff}
+.tabpanel{background:var(--card);border:2px solid var(--ink);border-radius:0 6px 6px 6px;padding:24px}
+.tabpanel[hidden]{display:none}
+.pgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:16px 0}
+@media(max-width:820px){.pgrid{grid-template-columns:1fr}}
+.pgrid div{background:var(--paper);border-radius:4px;padding:12px 16px}
+.pgrid h4{font-family:var(--head);margin:0 0 6px;font-size:1.05rem}
+.pgrid ul{margin:0;padding-left:1.1em;font-size:.98rem}
+.chips{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.chips span{background:var(--amber);border-radius:999px;padding:3px 14px;font-weight:600;font-size:.95rem}
+.chips b{font-family:var(--head);margin-right:4px}
+.dual{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:14px 0}
+@media(max-width:820px){.dual{grid-template-columns:1fr}}
+.dual pre{margin:0;background:var(--ink);color:#fff;border-radius:4px;padding:12px;font-size:.85rem;line-height:1.5;overflow-x:auto}
+.dual h4{font-family:var(--head);margin:0 0 6px}
 </style>
+
 </head>
 <body>
 
@@ -171,6 +192,7 @@ textarea.sql{width:100%;min-height:130px;background:var(--ink);color:#fff;border
       <a href="#students">Student table</a>
       <a href="#structure">Structure</a>
       <a href="#sql">SQL</a>
+      <a href="#types">Types</a>
       <!-- More links will be added as new components are built -->
     </nav>
   </div>
@@ -803,6 +825,121 @@ ORDER BY Name DESC;</code></div>
   $("sqlIn").addEventListener("keydown",function(e){if((e.ctrlKey||e.metaKey)&&e.key==="Enter"){e.preventDefault();runIt()}});
   $("sqlReset").onclick=function(){fresh();$("sqlOut").innerHTML='<p class="res">Practice data reset. Students has 5 rows and the Courses table is removed.</p>'};
   pick(3);
+})();
+</script>
+
+<!-- ============ COMPONENT 5: DATABASE TYPES ============ -->
+<section class="part" id="types">
+  <div class="wrap">
+    <h2>Database types and applications</h2>
+    <p>Not every database is built the same way. The right choice depends on what the data looks like, how much there is, and how it will be used. Select a category to explore it.</p>
+
+    <div class="tabs" role="tablist" aria-label="Database categories">
+      <button role="tab" id="tab-rel" aria-controls="pan-rel" aria-selected="true">Relational</button>
+      <button role="tab" id="tab-nosql" aria-controls="pan-nosql" aria-selected="false" tabindex="-1">NoSQL</button>
+      <button role="tab" id="tab-cloud" aria-controls="pan-cloud" aria-selected="false" tabindex="-1">Cloud</button>
+      <button role="tab" id="tab-dist" aria-controls="pan-dist" aria-selected="false" tabindex="-1">Distributed</button>
+    </div>
+
+    <div class="tabpanel" role="tabpanel" id="pan-rel" aria-labelledby="tab-rel">
+      <h3>Relational databases</h3>
+      <p><b>Definition:</b> A relational database stores data in tables of rows and columns, and connects the tables using keys. It is queried with SQL. This is the kind of database you built in the previous sections.</p>
+      <div class="pgrid">
+        <div><h4>Main characteristics</h4><ul><li>Fixed structure (schema) defined in advance</li><li>Tables linked by primary and foreign keys</li><li>Transactions follow ACID rules</li><li>Uses SQL</li></ul></div>
+        <div><h4>Advantages</h4><ul><li>Strong accuracy and data integrity</li><li>Powerful queries that combine tables</li><li>Mature, well-supported tools</li><li>Reliable for important records</li></ul></div>
+        <div><h4>Common applications</h4><ul><li>Banking and accounting</li><li>Student information systems</li><li>Inventory and order management</li><li>Hospital records</li></ul></div>
+      </div>
+      <div class="chips"><b>Example technologies:</b><span>MySQL</span><span>PostgreSQL</span><span>Microsoft SQL Server</span><span>Oracle Database</span></div>
+    </div>
+
+    <div class="tabpanel" role="tabpanel" id="pan-nosql" aria-labelledby="tab-nosql" hidden>
+      <h3>NoSQL databases</h3>
+      <p><b>Definition:</b> NoSQL ("not only SQL") databases store data in flexible formats instead of fixed tables. Common models are documents, key-value pairs, wide columns, and graphs.</p>
+      <div class="pgrid">
+        <div><h4>Main characteristics</h4><ul><li>Flexible or no fixed schema</li><li>Several data models to choose from</li><li>Designed to spread across many servers</li><li>Often tuned for speed and volume</li></ul></div>
+        <div><h4>Advantages</h4><ul><li>Easy to change as data evolves</li><li>Handles very large amounts of data</li><li>Very fast reads and writes</li><li>Fits data that is not table-shaped</li></ul></div>
+        <div><h4>Common applications</h4><ul><li>Social media feeds</li><li>Real-time apps and gaming</li><li>Caching and session storage</li><li>Product catalogs and IoT data</li></ul></div>
+      </div>
+      <div class="chips"><b>Example technologies:</b><span>MongoDB (document)</span><span>Redis (key-value)</span><span>Apache Cassandra (wide-column)</span><span>Neo4j (graph)</span></div>
+    </div>
+
+    <div class="tabpanel" role="tabpanel" id="pan-cloud" aria-labelledby="tab-cloud" hidden>
+      <h3>Cloud databases</h3>
+      <p><b>Definition:</b> A cloud database runs on a cloud provider's servers and is used over the internet, usually as a managed service. It can be relational or NoSQL. The word "cloud" describes where it runs, not how the data is organized.</p>
+      <div class="pgrid">
+        <div><h4>Main characteristics</h4><ul><li>The provider runs the hardware</li><li>Backups and updates are handled for you</li><li>Pay for what you use</li><li>Reachable from anywhere</li></ul></div>
+        <div><h4>Advantages</h4><ul><li>Little setup or maintenance</li><li>Easy to grow or shrink on demand</li><li>Built-in backup and high availability</li><li>No servers to buy</li></ul></div>
+        <div><h4>Common applications</h4><ul><li>Web and mobile apps</li><li>Startups and online services</li><li>Software-as-a-service products</li><li>Sites with seasonal traffic</li></ul></div>
+      </div>
+      <div class="chips"><b>Example technologies:</b><span>Amazon RDS</span><span>Azure SQL Database</span><span>Google Cloud SQL</span><span>MongoDB Atlas</span></div>
+    </div>
+
+    <div class="tabpanel" role="tabpanel" id="pan-dist" aria-labelledby="tab-dist" hidden>
+      <h3>Distributed databases</h3>
+      <p><b>Definition:</b> A distributed database is one logical database whose data is spread across several servers, often in different locations, that work together as a single system.</p>
+      <div class="pgrid">
+        <div><h4>Main characteristics</h4><ul><li>Data is split (sharded) across servers</li><li>Copies (replicas) are kept on several servers</li><li>No single point of failure</li><li>Must balance consistency against availability</li></ul></div>
+        <div><h4>Advantages</h4><ul><li>Keeps running if a server fails</li><li>Grows by adding more servers</li><li>Faster access by keeping data near users</li><li>Handles huge workloads</li></ul></div>
+        <div><h4>Common applications</h4><ul><li>Global online stores</li><li>Video and music streaming</li><li>Messaging platforms</li><li>Worldwide financial systems</li></ul></div>
+      </div>
+      <div class="chips"><b>Example technologies:</b><span>Apache Cassandra</span><span>CockroachDB</span><span>Google Cloud Spanner</span></div>
+    </div>
+
+    <article class="q alt" style="margin-top:32px">
+      <h3>Relational vs NoSQL</h3>
+      <div class="scroll">
+        <table class="cmp">
+          <thead><tr><th></th><th>Relational</th><th>NoSQL</th></tr></thead>
+          <tbody>
+            <tr><td>Data model</td><td>Tables with rows and columns</td><td>Documents, key-value, wide-column, or graph</td></tr>
+            <tr><td>Schema</td><td>Fixed and defined before data is added</td><td>Flexible and easy to change</td></tr>
+            <tr><td>Query language</td><td>SQL</td><td>Varies by product, such as MongoDB's own query language</td></tr>
+            <tr><td>Relationships</td><td>Strong, using primary and foreign keys and joins</td><td>Often handled by nesting data or in the application</td></tr>
+            <tr><td>Scaling</td><td>Traditionally by upgrading one bigger server</td><td>Typically by adding more servers</td></tr>
+            <tr><td>Consistency</td><td>Strong ACID transactions</td><td>Often relaxed (eventual consistency) for speed, though it varies</td></tr>
+            <tr><td>Best for</td><td>Structured data where accuracy matters most</td><td>Large, fast-changing, or varied data</td></tr>
+            <tr><td>Examples</td><td>MySQL, PostgreSQL, SQL Server</td><td>MongoDB, Redis, Cassandra</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="hint">The same student, stored two ways:</p>
+      <div class="dual">
+        <div><h4>Relational: a row in a table</h4><pre>StudentID | Name       | Major
+001       | John Smith | Computer Science</pre></div>
+        <div><h4>NoSQL: a document (MongoDB style)</h4><pre>{
+  "studentId": "001",
+  "name": "John Smith",
+  "major": "Computer Science",
+  "clubs": ["Chess", "Robotics"]
+}</pre></div>
+      </div>
+      <p class="hint">The categories overlap, and the gap is shrinking. PostgreSQL can store JSON documents, MongoDB supports transactions, and a database can be both cloud-hosted and distributed. Many real systems combine several types.</p>
+    </article>
+  </div>
+</section>
+
+<script>
+(function(){
+  var tabs=Array.prototype.slice.call(document.querySelectorAll('#types [role="tab"]'));
+  function show(t,focus){
+    tabs.forEach(function(x){
+      var on=x===t;
+      x.setAttribute("aria-selected",on?"true":"false");x.tabIndex=on?0:-1;
+      document.getElementById(x.getAttribute("aria-controls")).hidden=!on;
+    });
+    if(focus)t.focus();
+  }
+  tabs.forEach(function(t,i){
+    t.addEventListener("click",function(){show(t)});
+    t.addEventListener("keydown",function(e){
+      var n=null;
+      if(e.key==="ArrowRight")n=tabs[(i+1)%tabs.length];
+      else if(e.key==="ArrowLeft")n=tabs[(i+tabs.length-1)%tabs.length];
+      else if(e.key==="Home")n=tabs[0];
+      else if(e.key==="End")n=tabs[tabs.length-1];
+      if(n){e.preventDefault();show(n,true)}
+    });
+  });
 })();
 </script>
 
