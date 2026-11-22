@@ -4,6 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Database Learning Lab</title>
+<meta name="description" content="An interactive website for learning databases: concepts, a student records table, SQL practice, database types, videos, a quiz, and a chatbot.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%F0%9F%97%84%EF%B8%8F%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;800&family=Source+Sans+3:wght@400;600&display=swap" rel="stylesheet">
@@ -247,13 +249,42 @@ textarea.sql{width:100%;min-height:130px;background:var(--ink);color:#fff;border
 .chatform{display:flex;gap:10px;padding:12px 16px;border-top:2px solid var(--ink);background:#fff}
 .chatform input{flex:1}
 @media(max-width:600px){.msg{max-width:96%}}
+/* polish: structure and navigation */
+:root{--teal-dark:#0B6470}
+section[id]{scroll-margin-top:64px}
+.band{background:#E3EAF0}
+.eyebrow{display:inline-block;font-family:var(--head);font-weight:600;font-size:.85rem;letter-spacing:.08em;text-transform:uppercase;color:var(--teal-dark);margin-bottom:6px}
+.top nav{flex-wrap:nowrap;overflow-x:auto;max-width:100%;padding:6px 0}
+.top a{white-space:nowrap}
+.top a[aria-current="true"]{text-decoration:underline;text-decoration-color:var(--amber);text-decoration-thickness:3px;text-underline-offset:6px}
+.heroact{display:flex;flex-wrap:wrap;gap:12px;margin-top:6px}
+.heroact a{display:inline-block;text-decoration:none;font-weight:600;padding:10px 18px;border:2px solid var(--ink);border-radius:6px;background:var(--ink);color:#fff}
+.heroact a.alt{background:#fff;color:var(--ink)}
+.heroact a:hover{background:var(--amber);color:var(--ink)}
+.sitemap{padding:8px 0 48px}
+.sitemap h2{font-size:1.5rem}
+.map{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;list-style:none;padding:0;margin:14px 0 0}
+.map a{display:block;height:100%;background:#fff;border:2px solid var(--ink);border-radius:6px;padding:14px 16px;text-decoration:none;color:var(--ink)}
+.map a:hover{background:var(--amber)}
+.map .n{font-family:var(--head);font-weight:800;color:var(--teal-dark);font-size:.9rem}
+.map b{display:block;font-family:var(--head);font-size:1.1rem}
+.map span.d{display:block;font-size:.93rem;color:var(--muted);line-height:1.4;margin-top:2px}
+.map a:hover span.d,.map a:hover .n{color:var(--ink)}
+.testlog{margin-top:18px;background:var(--card);border:2px solid var(--ink);border-radius:6px;padding:12px 16px}
+.testlog summary{cursor:pointer;font-family:var(--head);font-weight:600}
+.testlog td,.testlog th{white-space:normal;vertical-align:top;font-size:.92rem}
+.totop{position:fixed;right:16px;bottom:16px;width:44px;height:44px;border-radius:50%;background:var(--ink);color:#fff;text-decoration:none;display:grid;place-items:center;font-size:1.3rem;border:2px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.3);z-index:9}
+.totop:hover{background:var(--teal)}
+footer{background:var(--ink);color:#C9D3DC;margin-top:0}
+footer a{color:#fff}
+footer .wrap{display:flex;flex-wrap:wrap;gap:8px 24px;justify-content:space-between}
 </style>
 
 
 </head>
 <body>
 
-<header class="top">
+<header class="top" id="top">
   <div class="wrap">
     <span class="brand">Database Learning Lab</span>
     <nav aria-label="Main">
@@ -276,18 +307,19 @@ textarea.sql{width:100%;min-height:130px;background:var(--ink);color:#fff;border
     <div>
       <h1>Learn how databases keep the world's information in order</h1>
       <p class="lead">Start with the basics here. Then explore, search, and edit a student database, try SQL, and test yourself.</p>
-      <p><a href="#intro">Start with the introduction</a></p>
+      <div class="heroact"><a href="#intro">Start learning</a><a class="alt" href="#sql">Try the SQL demo</a></div>
     </div>
     <div class="tablebox">
       <div class="tag">A database table: students</div>
       <div class="scroll">
         <table>
-          <thead><tr><th>StudentID</th><th>Name</th><th>Major</th><th>GPA</th></tr></thead>
+          <thead><tr><th>Student ID</th><th>Name</th><th>Major</th></tr></thead>
           <tbody>
-            <tr><td class="pk">1001</td><td>Amara Okafor</td><td>Biology</td><td>3.8</td></tr>
-            <tr><td class="pk">1002</td><td>Luis Herrera</td><td>Computer Science</td><td>3.5</td></tr>
-            <tr><td class="pk">1003</td><td>Mei Tanaka</td><td>Business</td><td>3.9</td></tr>
-            <tr><td class="pk">1004</td><td>Jack Brennan</td><td>History</td><td>3.2</td></tr>
+            <tr><td class="pk">001</td><td>John Smith</td><td>Computer Science</td></tr>
+            <tr><td class="pk">002</td><td>Jane Doe</td><td>Information Technology</td></tr>
+            <tr><td class="pk">003</td><td>Michael Brown</td><td>Data Science</td></tr>
+            <tr><td class="pk">004</td><td>Emily Wilson</td><td>Cybersecurity</td></tr>
+            <tr><td class="pk">005</td><td>David Johnson</td><td>Artificial Intelligence</td></tr>
           </tbody>
         </table>
       </div>
@@ -296,19 +328,36 @@ textarea.sql{width:100%;min-height:130px;background:var(--ink);color:#fff;border
   </div>
 </section>
 
+<section class="sitemap" aria-labelledby="mapT">
+  <div class="wrap">
+    <h2 id="mapT">What is on this site</h2>
+    <ol class="map">
+      <li><a href="#intro"><span class="n">PART 1</span><b>Introduction</b><span class="d">What databases and DBMS are, and where they are used.</span></a></li>
+      <li><a href="#students"><span class="n">PART 2</span><b>Student table</b><span class="d">Add, edit, delete, search, sort, and filter records.</span></a></li>
+      <li><a href="#structure"><span class="n">PART 3</span><b>Structure</b><span class="d">Keys, relationships, and a one-to-many diagram.</span></a></li>
+      <li><a href="#sql"><span class="n">PART 4</span><b>SQL demo</b><span class="d">Run SELECT, INSERT, UPDATE, and DELETE examples.</span></a></li>
+      <li><a href="#types"><span class="n">PART 5</span><b>Database types</b><span class="d">Relational, NoSQL, cloud, and distributed databases.</span></a></li>
+      <li><a href="#videos"><span class="n">PART 6</span><b>Video center</b><span class="d">Educational videos with notes on what I learned.</span></a></li>
+      <li><a href="#quiz"><span class="n">PART 7</span><b>Quiz</b><span class="d">14 questions with instant feedback and a score.</span></a></li>
+      <li><a href="#chatbot"><span class="n">PART 8</span><b>Chatbot</b><span class="d">Ask the DB Helper about concepts, SQL, and errors.</span></a></li>
+    </ol>
+  </div>
+</section>
+
 <!-- ============ COMPONENT 1: INTRODUCTION ============ -->
 <section class="part" id="intro">
   <div class="wrap">
+    <span class="eyebrow">Part 1 of 8</span>
     <h2>Introduction to databases</h2>
 
     <article class="q" id="what">
       <h3>1. What is a database?</h3>
       <p>A database is an organized collection of data stored so that people and programs can find, add, change, and remove information quickly. Think of a school's filing room, but searchable in a fraction of a second.</p>
-      <p>Most databases are built from tables. The student table above has three parts you will see throughout this site:</p>
+      <p>Most databases are built from tables. The student table above shows three parts you will see throughout this site:</p>
       <div class="anatomy">
         <div><b>Table</b>A group of related data about one kind of thing, such as students.</div>
-        <div><b>Record (row)</b>One complete entry, such as everything about Mei Tanaka.</div>
-        <div><b>Field (column)</b>One type of fact, such as Major or GPA.</div>
+        <div><b>Record (row)</b>One complete entry, such as everything about Michael Brown.</div>
+        <div><b>Field (column)</b>One type of fact, such as Major.</div>
       </div>
     </article>
 
@@ -317,7 +366,7 @@ textarea.sql{width:100%;min-height:130px;background:var(--ink);color:#fff;border
       <p>Without a database, information ends up scattered across papers, files, and inboxes. Databases solve that:</p>
       <div class="why">
         <div><b>Fast searching</b>Find one student among a million in moments.</div>
-        <div><b>Accurate data</b>Rules stop bad entries, such as a GPA of 9.5 or a duplicate ID.</div>
+        <div><b>Accurate data</b>Rules stop bad entries, such as a duplicate Student ID or a blank name.</div>
         <div><b>Shared access</b>Many people use the same up-to-date data at once.</div>
         <div><b>Security and backup</b>Only approved users see data, and copies protect against loss.</div>
       </div>
@@ -347,7 +396,7 @@ textarea.sql{width:100%;min-height:130px;background:var(--ink);color:#fff;border
           <line x1="162" y1="95" x2="206" y2="95" stroke="#1B2A3A" stroke-width="2" marker-end="url(#ar)"/>
           <line x1="362" y1="95" x2="406" y2="95" stroke="#1B2A3A" stroke-width="2" marker-end="url(#ar)"/>
           <line x1="562" y1="95" x2="616" y2="95" stroke="#1B2A3A" stroke-width="2" marker-end="url(#ar)"/>
-          <text x="285" y="170" text-anchor="middle">Request: "Show all biology majors"</text>
+          <text x="285" y="170" text-anchor="middle">Request: "Show all Data Science majors"</text>
           <text x="560" y="30" text-anchor="middle">Reads and writes data</text>
         </svg>
       </div>
@@ -379,7 +428,7 @@ textarea.sql{width:100%;min-height:130px;background:var(--ink);color:#fff;border
       <div class="examples">
         <details class="ex"><summary>University student information system</summary>
           <p>Stores who is enrolled, which classes they take, and their grades.</p>
-          <div class="scroll"><table><thead><tr><th>StudentID</th><th>Course</th><th>Grade</th></tr></thead><tbody><tr><td>1001</td><td>BIO101</td><td>A</td></tr><tr><td>1002</td><td>CS110</td><td>B+</td></tr></tbody></table></div>
+          <div class="scroll"><table><thead><tr><th>Student ID</th><th>Course</th><th>Grade</th></tr></thead><tbody><tr><td>001</td><td>CS110</td><td>A</td></tr><tr><td>002</td><td>IT120</td><td>B+</td></tr></tbody></table></div>
         </details>
         <details class="ex"><summary>Banking and financial systems</summary>
           <p>Records every account and transaction, and must never lose or double-count money.</p>
@@ -399,7 +448,7 @@ textarea.sql{width:100%;min-height:130px;background:var(--ink);color:#fff;border
         </details>
         <details class="ex"><summary>Library management systems</summary>
           <p>Tracks every book, who borrowed it, and when it is due back.</p>
-          <div class="scroll"><table><thead><tr><th>Book</th><th>Borrower</th><th>Due</th></tr></thead><tbody><tr><td>Dune</td><td>1003</td><td>Dec 1</td></tr><tr><td>Emma</td><td>1001</td><td>Dec 4</td></tr></tbody></table></div>
+          <div class="scroll"><table><thead><tr><th>Book</th><th>Borrower</th><th>Due</th></tr></thead><tbody><tr><td>Dune</td><td>003</td><td>Dec 1</td></tr><tr><td>Emma</td><td>001</td><td>Dec 4</td></tr></tbody></table></div>
         </details>
       </div>
     </article>
@@ -407,8 +456,9 @@ textarea.sql{width:100%;min-height:130px;background:var(--ink);color:#fff;border
 </section>
 
 <!-- ============ COMPONENT 2: STUDENT TABLE ============ -->
-<section class="part" id="students">
+<section class="part band" id="students">
   <div class="wrap">
+    <span class="eyebrow">Part 2 of 8</span>
     <h2>Interactive student database</h2>
     <p>This table works like a small database. Each row is a record with three fields: Student ID, Name, and Major. Add, edit, delete, search, sort, and filter the records below.</p>
     <div class="storage">
@@ -480,6 +530,7 @@ textarea.sql{width:100%;min-height:130px;background:var(--ink);color:#fff;border
 <!-- ============ COMPONENT 3: STRUCTURE AND RELATIONSHIPS ============ -->
 <section class="part" id="structure">
   <div class="wrap">
+    <span class="eyebrow">Part 3 of 8</span>
     <h2>Database structure and relationships</h2>
     <p>A database stores more than one list. It splits information into separate tables and connects them. These six ideas explain how.</p>
 
@@ -595,8 +646,9 @@ textarea.sql{width:100%;min-height:130px;background:var(--ink);color:#fff;border
 </script>
 
 <!-- ============ COMPONENT 4: SQL DEMONSTRATION ============ -->
-<section class="part" id="sql">
+<section class="part band" id="sql">
   <div class="wrap">
+    <span class="eyebrow">Part 4 of 8</span>
     <h2>Interactive SQL demonstration</h2>
     <p><b>SQL</b> (Structured Query Language) is the language used to talk to a relational database. You write a short statement that says what you want, and the DBMS figures out how to do it. These seven pieces cover most everyday database work.</p>
 
@@ -903,6 +955,7 @@ ORDER BY Name DESC;</code></div>
 <!-- ============ COMPONENT 5: DATABASE TYPES ============ -->
 <section class="part" id="types">
   <div class="wrap">
+    <span class="eyebrow">Part 5 of 8</span>
     <h2>Database types and applications</h2>
     <p>Not every database is built the same way. The right choice depends on what the data looks like, how much there is, and how it will be used. Select a category to explore it.</p>
 
@@ -1016,8 +1069,9 @@ ORDER BY Name DESC;</code></div>
 </script>
 
 <!-- ============ COMPONENT 6: VIDEO CENTER ============ -->
-<section class="part" id="videos">
+<section class="part band" id="videos">
   <div class="wrap">
+    <span class="eyebrow">Part 6 of 8</span>
     <h2>Database video center</h2>
     <p>Watch these educational videos to see database ideas explained by other teachers. The videos are embedded with YouTube's official player, and each one credits its creator. Choose a topic to filter the list.</p>
     <div class="vfilters" role="group" aria-label="Filter videos by topic"><button type="button" class="vf" data-t="all" aria-pressed="true">All topics</button><button type="button" class="vf" data-t="intro" aria-pressed="false">Introduction to Databases and DBMS</button><button type="button" class="vf" data-t="sql" aria-pressed="false">SQL Fundamentals</button><button type="button" class="vf" data-t="relational" aria-pressed="false">Relational Databases, Tables, and Keys</button><button type="button" class="vf" data-t="engines" aria-pressed="false">MySQL and PostgreSQL</button></div>
@@ -1106,6 +1160,7 @@ ORDER BY Name DESC;</code></div>
 <!-- ============ COMPONENT 7: QUIZ ============ -->
 <section class="part" id="quiz">
   <div class="wrap">
+    <span class="eyebrow">Part 7 of 8</span>
     <h2>Database quiz</h2>
     <p>Test what you have learned. There are 14 multiple-choice questions. You get instant feedback and an explanation after each answer, and your score is calculated automatically. The answer order is shuffled each time you play.</p>
     <div class="quiz" id="quizBox" aria-live="polite"></div>
@@ -1225,12 +1280,13 @@ ORDER BY Name DESC;</code></div>
 </script>
 
 <!-- ============ COMPONENT 8: CHATBOT ============ -->
-<section class="part" id="chatbot">
+<section class="part band" id="chatbot">
   <div class="wrap">
+    <span class="eyebrow">Part 8 of 8</span>
     <h2>Database chatbot</h2>
     <p>Ask the DB Helper about databases and SQL. It can explain concepts, write basic SQL for you, check a SQL statement for mistakes, explain common errors, and answer questions about the student table on this page.</p>
     <div class="storage">
-      <p><b>How the chatbot works:</b> it is a <b>rule-based assistant that runs entirely in your browser</b>. It does not call an external AI service, so no API key is stored in this page. It matches your question to a built-in knowledge base, builds SQL from your description, checks pasted SQL for common mistakes, and reads the student records saved in your browser. It can only answer within those topics.</p>
+      <p><b>How the chatbot works:</b> it is a <b>rule-based assistant that runs entirely in your browser</b>. It does not call an external AI service, so no API key is stored in this page. You can chat with it casually (greetings, jokes, fun facts, follow-ups like "give me an example" or "explain it simply"), and it remembers your name and the last topic during the chat. For databases it uses a built-in knowledge base, builds SQL from your description, checks pasted SQL for mistakes, and reads the student records saved in your browser. It is not a large AI model, so for topics outside databases it will say so honestly.</p>
     </div>
 
     <div class="chat">
@@ -1245,6 +1301,12 @@ ORDER BY Name DESC;</code></div>
         <button class="btn" type="submit">Send</button>
       </form>
     </div>
+
+    <details class="testlog">
+      <summary>Chatbot test log: 8 questions tested</summary>
+      <div class="scroll"><table><thead><tr><th>Question</th><th>Topic</th><th>What the chatbot did</th><th>Result</th></tr></thead><tbody><tr><td>What is a DBMS?</td><td>DBMS</td><td>Defined a DBMS, listed what it does, and gave examples.</td><td>Correct</td></tr><tr><td>Difference between primary key and foreign key</td><td>Keys</td><td>Compared both keys using Student ID and Major ID.</td><td>Correct</td></tr><tr><td>Write a query to show students majoring in Data Science sorted by name</td><td>Writing SQL</td><td>Built a SELECT with WHERE and ORDER BY and explained each clause.</td><td>Correct</td></tr><tr><td>SQL vs NoSQL?</td><td>Database types</td><td>Compared structure, relationships, consistency, and scaling.</td><td>Correct</td></tr><tr><td>Why do I get a duplicate entry error?</td><td>Errors</td><td>Explained the duplicate primary key problem and how to fix it.</td><td>Correct</td></tr><tr><td>How many students are in my table?</td><td>Student table</td><td>Read the saved table and reported the current record count.</td><td>Correct</td></tr><tr><td>SELECT * FORM Students</td><td>Checking SQL</td><td>Flagged the FORM typo (should be FROM) and explained the statement.</td><td>Correct</td></tr><tr><td>Explain one-to-many relationships</td><td>Relationships</td><td>Explained one-to-one, one-to-many, and many-to-many with examples.</td><td>Correct</td></tr></tbody></table></div>
+      <p class="hint">Select "Run 8 test questions" above to repeat these tests live.</p>
+    </details>
   </div>
 </section>
 
@@ -1281,7 +1343,7 @@ ORDER BY Name DESC;</code></div>
 
   /* ---------- knowledge base ---------- */
   var KB=[
-   {id:"db",kw:["what is database|6","define database|5","explain database|4","database|1","databases|1"],a:[
+   {id:"db",kw:["what is database|6","define database|5","explain database|4","tell me about database|6","tell me about databases|6","about databases|5","database|1","databases|1"],a:[
      "A **database** is an organized collection of data stored so it can be found, added, changed, and removed quickly. Think of a digital filing cabinet that can answer questions in a fraction of a second.",
      "Most databases keep data in **tables** made of rows and columns. The student table on this page has three fields: Student ID, Name, and Major.",
      "Databases matter because they keep data accurate, searchable, shared by many users at once, and secure. Banks, hospitals, online shops, and universities all depend on them."]},
@@ -1321,19 +1383,19 @@ ORDER BY Name DESC;</code></div>
      "**SQL (Structured Query Language)** is the standard language for working with relational databases. You describe what you want, and the DBMS works out how to do it.",
      "The core commands:\n- `CREATE TABLE`: build a table\n- `INSERT INTO`: add records\n- `SELECT`: read records\n- `UPDATE`: change records\n- `DELETE`: remove records\n- `WHERE` filters and `ORDER BY` sorts",
      "Try them in the SQL demo section above, or ask me to write a query, for example: \"write a query to show students majoring in Data Science\"."]},
-   {id:"select",kw:["select|5","retrieve data|4","read data|3"],a:[
+   {id:"select",kw:["select|4","retrieve data|4","read data|3"],a:[
      "`SELECT` retrieves records without changing them.",
      "SQL:SELECT * FROM Students;\nSELECT Name, Major FROM Students\nWHERE Major = 'Data Science'\nORDER BY Name;",
      "`*` means all columns. List column names to get only those. Add `WHERE` to filter rows and `ORDER BY` to sort them."]},
-   {id:"insert",kw:["insert|5","insert into|7","add record|4","add data|3"],a:[
+   {id:"insert",kw:["insert|4","insert into|7","add record|4","add data|3"],a:[
      "`INSERT INTO` adds a new record to a table.",
      "SQL:INSERT INTO Students (StudentID, Name, Major)\nVALUES ('006', 'Sara Lopez', 'Computer Science');",
      "Text values go in single quotes, and values must be in the same order as the column list. If the primary key already exists, the database rejects the insert."]},
-   {id:"update",kw:["update|5","modify data|3","change data|3"],a:[
+   {id:"update",kw:["update|4","modify data|3","change data|3"],a:[
      "`UPDATE` changes values in records that already exist.",
      "SQL:UPDATE Students\nSET Major = 'Data Science'\nWHERE StudentID = '001';",
      "**Always include WHERE.** Without it, every row in the table is changed."]},
-   {id:"delete",kw:["delete|5","delete from|7","remove record|4","remove data|3"],a:[
+   {id:"delete",kw:["delete|4","delete from|7","remove record|4","remove data|3"],a:[
      "`DELETE FROM` removes records from a table.",
      "SQL:DELETE FROM Students\nWHERE StudentID = '005';",
      "**Always include WHERE.** Without it, every row is deleted. A good habit is to run a `SELECT` with the same WHERE first, to see exactly which rows will be removed. (`DROP TABLE` is different: it removes the whole table.)"]},
@@ -1341,7 +1403,7 @@ ORDER BY Name DESC;</code></div>
      "`CREATE TABLE` builds a new table and defines its columns, their data types, and the primary key.",
      "SQL:CREATE TABLE Courses (\n  CourseID VARCHAR(6) PRIMARY KEY,\n  Title VARCHAR(40),\n  Credits INT\n);",
      "Common types: `INT` for whole numbers, `VARCHAR(n)` for text up to n characters, `DATE` for dates, `DECIMAL` for money."]},
-   {id:"where",kw:["where|5","filter|4","condition|3","like|3"],a:[
+   {id:"where",kw:["where|4","filter|3","condition|2","like operator|5","sql like|5"],a:[
      "`WHERE` filters which rows a command applies to.",
      "SQL:SELECT * FROM Students WHERE Major = 'Cybersecurity';\nSELECT * FROM Students WHERE StudentID > '002';\nSELECT * FROM Students WHERE Name LIKE 'J%';\nSELECT * FROM Students WHERE Major = 'Data Science' AND StudentID < '005';",
      "Use `=`, `!=`, `<`, `>`, `<=`, `>=`, `LIKE` (with `%` as a wildcard), and combine conditions with `AND` and `OR`. Text values need single quotes."]},
@@ -1349,7 +1411,7 @@ ORDER BY Name DESC;</code></div>
      "`ORDER BY` sorts query results. `ASC` is A to Z or smallest first (the default). `DESC` is Z to A or largest first.",
      "SQL:SELECT * FROM Students\nORDER BY Name DESC;",
      "It goes after WHERE: the database filters first, then sorts what is left."]},
-   {id:"agg",kw:["count|4","group by|7","sum|3","average|4","avg|4","aggregate|6","max|3","min|3"],a:[
+   {id:"agg",kw:["count|4","group by|7","sum|2","average|3","avg|4","aggregate|6","max|3","min|3"],a:[
      "Aggregate functions summarize many rows into one value: `COUNT`, `SUM`, `AVG`, `MIN`, and `MAX`. `GROUP BY` does it per group.",
      "SQL:SELECT COUNT(*) FROM Students;\nSELECT Major, COUNT(*) AS Total\nFROM Students\nGROUP BY Major;",
      "These work in real MySQL and PostgreSQL. The practice SQL demo above only supports the seven basic commands."]},
@@ -1396,7 +1458,7 @@ ORDER BY Name DESC;</code></div>
      "Input is validated: IDs must be 1 to 6 digits, names must use letters, and duplicate IDs are rejected because Student ID is the primary key. You can also ask me questions about it, such as \"how many students are in my table?\"."]},
    {id:"quizvid",kw:["quiz|5","videos|5","video|5","test myself|5"],a:[
      "Scroll to the **Video center** to watch short lessons, each with notes on what was learned, and to the **Quiz** to test yourself with 14 questions. I am also happy to explain any quiz topic you find tricky."]},
-   {id:"help",kw:["help|2","what can you do|10","what can you answer|10","capabilities|6","topics|4","what do you know|8"],a:[
+   {id:"help",kw:["help|5","what can you do|10","what can you answer|10","capabilities|6","topics|4","what do you know|8"],a:[
      "I can help with:",
      "- Databases, DBMS, tables, records, and fields\n- Primary keys, foreign keys, and relationships\n- SQL commands, and **writing basic queries** from a description\n- **Checking your SQL** for mistakes and explaining error messages\n- SQL vs NoSQL, MySQL, MongoDB, cloud and distributed databases\n- Your **student table** on this page (counts, lists, lookups, how-to)",
      "Try: \"Write SQL to show students sorted by name\" or \"Why do I get a duplicate entry error?\""]}
@@ -1627,32 +1689,167 @@ ORDER BY Name DESC;</code></div>
     return a;
   }
 
+  /* ---------- conversation layer ---------- */
+  var ctx={name:null,last:null,g:0,h:0,j:0,f:0,u:0,fb:0,o:0};
+  function pick(arr,key){var v=arr[ctx[key]%arr.length];ctx[key]++;return v}
+  function nm(){return ctx.name?", "+ctx.name:""}
+  function entryById(id){return KB.filter(function(e){return e.id===id})[0]}
+  function kbBest(n){
+    var best=null,bs=0;
+    KB.forEach(function(e){var sc=0;e.k.forEach(function(k){if(n.indexOf(" "+k.t+" ")>=0)sc+=k.w});if(sc>bs){bs=sc;best=e}});
+    return {e:best,s:bs};
+  }
+  var STOPNAMES=["good","fine","great","okay","ok","tired","bored","sad","happy","confused","lost","stuck","here","back","ready","new","sorry","sure","done","excited","nervous","stressed","worried","well","alright"];
+  var GREET=["Hello! Good to see you. We can chat or dive into databases, whichever you like.","Hi there! I am the DB Helper. What would you like to talk about today?","Hey! Ready when you are. Ask me about databases or SQL, or just say hi."];
+  var HOW=["I am doing well, thanks for asking! I spend my days thinking about tables and keys, so it is a pretty good life. How are you doing?","Doing great, thanks! Every question you ask makes my day more interesting. How is your day going?","I am good! No bugs so far today. How about you?"];
+  var JOKES=["A SQL query walks into a bar, walks up to two tables, and asks: \"Can I join you?\"","Why did the primary key feel so special? It was one of a kind, and it was never null.","A NoSQL query walks into a bar, but it cannot find a table to sit at.","Why was the new developer's career so short? He ran DELETE FROM customers and forgot the WHERE.","Why do databases make great friends? They never forget anything you tell them, as long as you COMMIT."];
+  var FACTS=["The relational model was proposed by Edgar F. Codd at IBM in 1970. It is the idea behind MySQL, PostgreSQL, and SQL Server.","SQL was originally called SEQUEL, short for Structured English Query Language, before it was shortened to SQL.","The name MongoDB comes from the word \"humongous\", a nod to the huge amounts of data it was built to handle.","SQLite is a tiny database engine found inside phones, web browsers, and countless apps, so you probably use a database dozens of times a day.","Redis keeps its data in memory (RAM) instead of on disk, which is why it can answer so quickly."];
+  var SIMPLE={
+    db:"Picture a really well-organized filing cabinet. Everything has a labeled folder, so you can find any paper fast. A database is that, but a computer can search it in a blink.",
+    dbms:"The DBMS is like a librarian. You ask for a book, and the librarian knows where everything is, who is allowed to borrow it, and keeps the shelves in order.",
+    table:"A table is like a grid in a notebook. Each row is one person's entry, and each column is one question you asked everybody, such as name or major.",
+    pk:"A primary key is like a student ID number. Two students can share a name, but never an ID, so the ID always points to exactly one person.",
+    fk:"A foreign key is like writing a student's ID number on a form instead of copying all their details. It points you to where the full details are kept.",
+    pkfk:"The primary key is a record's own unique ID. A foreign key is a note that points to someone else's ID in another table.",
+    rel:"Think of a school: one teacher has many students. A relationship just describes which things connect to which, and how many.",
+    relational:"A relational database is a set of neat tables that point to each other using ID numbers, so nothing has to be written twice.",
+    join:"A join is like matching two lists. You take each student's major code and look it up in the majors list to get the full name.",
+    sql:"SQL is how you ask a database a question in nearly plain English, such as: show me the names of students whose major is Data Science.",
+    select:"SELECT means \"show me\". You say which columns you want and which table to look in.",
+    insert:"INSERT means \"add a new row\", like writing a new line at the bottom of a list.",
+    update:"UPDATE means \"edit existing rows\", like fixing a typo in a list. The WHERE part says which row to fix.",
+    delete:"DELETE means \"remove rows\", like crossing a line off a list. The WHERE part says which line.",
+    where:"WHERE is a filter. Only the rows that pass your test are included.",
+    order:"ORDER BY just sorts the answer, like alphabetizing a list.",
+    nosql:"SQL databases are like neat spreadsheets with fixed columns. NoSQL databases are like folders of documents where each document can look a little different.",
+    cloud:"A cloud database is one that someone else's computers run and look after for you. You rent it instead of owning the hardware.",
+    dist:"Instead of one big filing room, a distributed database uses many rooms in different places that keep copies in sync.",
+    acid:"Think of a bank transfer. Either the money leaves one account and arrives in the other, or nothing happens at all. That all-or-nothing idea is a transaction.",
+    norm:"It is like saving a friend's phone number once in your contacts instead of retyping it in every message.",
+    errors:"Most SQL errors are small typos or missing quotes. Read the message, then check the statement one piece at a time.",
+    sheet:"A spreadsheet is great for one person. A database is built for many people and lots of connected data at once.",
+    stu:"The table on this page lets you add, change, remove, search, and sort a small list of students, just like a real system does at a bigger scale."
+  };
+  var EXTRA={
+    db:"A university keeps Students, Courses, and Grades in one database, so the registrar can ask \"Which students passed CS110?\" and get an answer instantly.",
+    dbms:"When you log in to a school portal and your grades appear, the portal asked a DBMS such as MySQL for your records, after checking you were allowed to see them.",
+    table:"In the student table, `001 | John Smith | Computer Science` is one row (a record), and Major is one column (a field).",
+    pkfk:"In Students, `StudentID` is the primary key (unique for each student) and `MajorID` is a foreign key (it points to a row in Majors).",
+    rel:"Majors and Students: one major, CS01, can have many students. Each student row stores CS01 as its foreign key.",
+    relational:"Students, Majors, and Courses are three tables linked by ID numbers. A query can follow those links to answer questions across all three.",
+    nosql:"A MongoDB student document can hold extra data inside it, such as a list of clubs, without adding a new column for every other student.",
+    cloud:"A small startup rents an Amazon RDS database instead of buying servers, and pays only for what it uses.",
+    dist:"An online store keeps copies of its product data in the US, Europe, and Asia so every shopper gets fast answers.",
+    acid:"Moving $100: subtract $100 from account A, then add $100 to account B. In a transaction, if the second step fails, the first one is undone.",
+    norm:"Instead of typing \"Computer Science\" in 500 student rows, store the code CS01 and keep the full name once in the Majors table.",
+    sheet:"A spreadsheet shared by 20 people can overwrite each other's edits, while a database handles all 20 users at the same time.",
+    errors:"`SELECT * FORM Students` fails because FORM should be FROM. Paste a statement and I will check yours.",
+    stu:"Try adding a student with an ID that already exists in the table above. It will refuse, because a primary key must be unique."
+  };
+  var NEXT={
+    db:["DBMS (the software that manages a database)","Tables, records, and fields","Primary keys"],dbms:["SQL","Relational databases","SQL vs NoSQL"],
+    table:["Primary keys","Foreign keys","Relationships"],pk:["Foreign keys","Database relationships"],fk:["Relationships","Joins"],pkfk:["Relationships","Joins"],
+    rel:["Joins","Normalization"],relational:["SQL","Joins","Normalization"],join:["Normalization","Aggregate functions like COUNT"],
+    sql:["SELECT","WHERE and ORDER BY","INSERT, UPDATE, and DELETE"],select:["WHERE","ORDER BY","Joins"],insert:["UPDATE","DELETE"],update:["WHERE","DELETE"],delete:["WHERE","Common SQL errors"],
+    where:["ORDER BY","Joins"],order:["WHERE","Aggregate functions like COUNT"],create:["INSERT","Primary keys"],agg:["Joins","Normalization"],
+    nosql:["MongoDB","Cloud databases","Distributed databases"],mm:["SQL vs NoSQL","Cloud databases"],cloud:["Distributed databases","SQL vs NoSQL"],dist:["ACID transactions","Cloud databases"],
+    acid:["Distributed databases","Relational databases"],norm:["Foreign keys","Joins"],sheet:["Relational databases","DBMS"],errors:["SELECT","WHERE","Primary keys"],stu:["SQL","Primary keys"]
+  };
+  var QFALL=["That one is outside what I know. I am built around databases and SQL, and I cannot look things up online, so I would rather not guess.","Good question, but it is outside my wheelhouse. I do not have internet access or knowledge beyond databases.","I am not the right bot for that one. I only know databases and SQL, and I would rather say so than make something up."];
+  var SFALL=["Interesting! I mostly know databases and SQL, but I am happy to chat.","Got it. I should be honest: databases are my specialty, so I may not have much to add on that.","Thanks for telling me that."];
+  var OFFER=["Want to hear a database joke, or should we get back to SQL?","If you like, ask me about tables, keys, or SQL, or say \"tell me a joke\".","I can explain a concept, write a query, or share a fun fact. What sounds good?"];
+
+  function chat(text,n,c){
+    var m,asked=ctx.askedHow;ctx.askedHow=false;
+    m=text.match(/\b(?:my name is|call me|you can call me)\s+([A-Za-z]{2,20})/i);
+    if(!m){var m1=text.match(/^\s*i(?:'|\u2019)?m\s+([A-Z][a-z]{1,19})\s*[.!]?\s*$/);if(m1)m=m1}
+    if(m&&STOPNAMES.indexOf(m[1].toLowerCase())<0){ctx.name=title(m[1].toLowerCase());return ["Nice to meet you, "+ctx.name+"! I will remember that for this chat. What would you like to explore: concepts, SQL, or the student table?"]}
+    if(/ (what is|whats|do you know|do you remember|tell me) my name /.test(c))return [ctx.name?"Your name is "+ctx.name+".":"You have not told me yet. What should I call you?"];
+    if(/^ (hi|hello|hey|yo|hiya|howdy|greetings|sup|good morning|good afternoon|good evening|hey there|hi there|hello there)( there| helper| db helper| bot| everyone)? $/.test(c))return [pick(GREET,"g").replace("Hello!","Hello"+nm()+"!").replace("Hi there!","Hi there"+nm()+"!").replace("Hey!","Hey"+nm()+"!")];
+    if(/ (how are you|how r you|how are you doing|how do you do|hows it going|how is it going|how have you been|hows your day|how is your day|how you doing|you doing ok) /.test(c)){ctx.askedHow=true;return [pick(HOW,"h")]}
+    if(/ (what are you doing|whats up|what is up|wassup|are you there|you there) /.test(c))return ["I am right here in your browser, waiting for database questions. What are you working on?"];
+    if(/^ (im |i am )?(good|fine|great|well|okay|ok|not bad|doing well|doing good|pretty good|alright|awesome|doing great)( thanks| thank you)?( and you)? $/.test(c)&&asked)return ["Glad to hear it"+nm()+"! Want to pick up with some SQL, or try the quiz?"];
+    if(/ (who are you|what are you|your name|who r you|are you (a |an )?(bot|robot|ai|human|real|person|chatgpt|gpt|claude|alive)|tell me about yourself|introduce yourself) /.test(c))
+      return ["I am the DB Helper, a chatbot built for this learning site. To be upfront: I am a rule-based program running in your browser, not a person and not a large AI model. I know databases and SQL well, and I enjoy a casual chat too."];
+    if(/ (how do you work|how does this chatbot work|how were you built|how are you built|how do you answer) /.test(c))return ["I match your message against a built-in knowledge base about databases and SQL, build SQL from descriptions, check SQL you paste for common mistakes, and read the student records saved in your browser. For casual chat I use a set of conversation rules. I am not a large AI model, so I stay honest about what I do not know."];
+    if(/ (do you like|do you enjoy|do you love) (databases|database|sql|data|tables|helping|talking) /.test(c))return ["I do! There is something satisfying about data that is neatly organized and a query that returns exactly what you asked for. What about you, do you enjoy working with data?"];
+    if(/ (who made you|who built you|who created you|who programmed you|who wrote you|who is your creator|who designed you) /.test(c))return ["I was built as part of this Database Learning Website project, to help visitors learn about databases and SQL."];
+    if(/ (favorite|favourite|best) (database|dbms|sql|query language) /.test(c)||/ (which|what) database (do you like|is best|should i use) /.test(c))
+      return ["It depends on the job! PostgreSQL is popular for its many features, MySQL is a common choice for websites, SQLite is great for small apps, and MongoDB suits flexible, document-style data. If I had to name one for learning SQL, I would pick PostgreSQL or MySQL."];
+    if(/ (thanks|thank you|thx|ty|thank u|appreciate it|cheers) /.test(c))return ["You are welcome"+nm()+"! Ask me anything else, about databases or just for fun."];
+    if(/^ (bye|goodbye|see you|see ya|later|good night|gotta go|cya) /.test(c))return ["Goodbye"+nm()+"! Good luck with your database studies. Come back anytime."];
+    if(/ (you are|youre|ur) (so |very |really |pretty |quite )?(smart|good|great|awesome|amazing|helpful|cool|nice|clever|the best|funny|wonderful|useful) /.test(c)||/ (good bot|nice job|well done|great job|good job|love you|nice work) /.test(c))return ["Thank you, that is kind of you to say! I am glad I could help. What else shall we look at?"];
+    if(/ (you are|youre|ur) (so |very |really )?(dumb|stupid|useless|bad|terrible|awful|annoying|wrong) /.test(c)||/ (you suck|this is useless|not helpful|that was wrong|thats wrong|that is wrong) /.test(c))return ["Sorry about that. I am a simple chatbot and I do miss things. Could you rephrase, or tell me which part was off? I will do my best to explain it a different way."];
+    if(/ (joke|funny|make me laugh|cheer me up|something funny) /.test(c)&&c.split(" ").length<10)return [pick(JOKES,"j"),"Want another one, or shall we get back to databases?"];
+    if(/ (fun fact|interesting fact|did you know|tell me something|random fact|surprise me|something interesting) /.test(c))return [pick(FACTS,"f"),"Want another fact, or a concept explained?"];
+    if(/ (what time is it|current time|what is the time|whats the time|time is it) /.test(c))return ["It is "+new Date().toLocaleTimeString([],{hour:"numeric",minute:"2-digit"})+" on your device's clock."];
+    if(/ (what day is it|todays date|what is the date|whats the date|what is today|whats today|what is todays date|what date is it) /.test(c))return ["Today is "+new Date().toLocaleDateString([],{weekday:"long",year:"numeric",month:"long",day:"numeric"})+" according to your device."];
+    var mm=text.match(/^\s*(?:what\s*is|what's|whats|calculate|compute|solve)?\s*([\d\s+\-*\/().^x\u00D7\u00F7%]+?)\s*[=?]*\s*$/i);
+    if(mm&&/\d/.test(mm[1])&&/[+\-*\/^x\u00D7\u00F7%]/.test(mm[1].trim().replace(/^-/,""))){
+      var ex=mm[1].replace(/x|\u00D7/gi,"*").replace(/\u00F7/g,"/").replace(/\^/g,"**");
+      if(/^[\d\s+\-*\/().%]+$/.test(ex)){try{var v=Function('"use strict";return ('+ex+')')();if(typeof v==="number"&&isFinite(v)){v=Math.round(v*1e10)/1e10;return ["That is **"+v+"**.","Fun fact: a database can do this too. In SQL you could run `SELECT "+mm[1].trim()+";` and it would calculate the answer."]}}catch(e){}}
+    }
+    var kbHit=kbBest(n).s>=2;
+    if(!kbHit&&(/ (im|i am|i feel|feeling|i have been|ive been) (so |really |very |kind of |a bit |getting |just )?(tired|stressed|stressed out|overwhelmed|confused|lost|struggling|bored|worried|nervous|anxious|frustrated|sad|exhausted|stuck) /.test(c)||(/ (hard|difficult|confusing|too much) /.test(c)&&/ (this|database|databases|sql|class|course|exam|test|quiz|homework|assignment) /.test(c))))
+      return ["That sounds frustrating, and it is completely normal. Databases have a lot of new vocabulary at first, and it clicks once you see a few examples.",ctx.last?"Want me to explain it more simply? Just say \"explain it simply\" or \"give me an example\".":"Want to start small? I can explain tables and keys in plain language, or you can try the quiz for some quick practice."];
+    if(/ (im|i am|i feel) (so |really |very )?(happy|excited|proud|motivated|ready) /.test(c))return ["That is great to hear! Let's put that energy to use. What would you like to learn or try?"];
+    if(/^ (lol|haha|hahaha|lmao|hehe|ha ha) $/.test(c))return ["Glad that landed! Want another joke or shall we go back to databases?"];
+    if(/^ (ok|okay|cool|nice|got it|i see|makes sense|alright|understood|great|awesome|interesting|wow) $/.test(c))return ctx.last?followup("more",n):["Great! Anything else you want to ask about databases or SQL?"];
+    if(/^ (yes|yeah|yep|sure|please|go ahead|yes please|ok sure|why not) $/.test(c))return ctx.last?followup("more",n):["Sure! What would you like to do: ask a question, see a joke, or try a SQL example?"];
+    if(/^ (no|nope|nah|no thanks|not really|no thank you) $/.test(c))return ["No problem. I am here whenever you want to ask something else."];
+    return null;
+  }
+
+  function followup(kind,n){
+    var kb=kbBest(n),id=kb.s>=2?kb.e.id:ctx.last,e=id?entryById(id):null;
+    if(!e)return ["Happy to! Which topic should I use? For example: primary keys, foreign keys, relationships, or SELECT."];
+    ctx.last=e.id;
+    if(kind==="example"){
+      if(EXTRA[id])return ["Here is an example:",EXTRA[id]];
+      var code=e.a.filter(function(x){return x.indexOf("SQL:")===0})[0];
+      if(code)return ["Here is a concrete example:",code,"You can paste it into the SQL demo above to try it."];
+      return ["Here is a quick example using the student table: `001 | John Smith | Computer Science` is one record, with the fields Student ID, Name, and Major."];
+    }
+    if(kind==="simple")return ["Let me put it more simply.",SIMPLE[id]||e.a[0].split(". ")[0]+".","If it helps, I can also give an example. Just ask."];
+    var nx=NEXT[id]||["Databases and DBMS","Primary and foreign keys","SQL"];
+    return ["Good next steps from here:","- "+nx.join("\n- "),"Ask me about any of these, for example: \"What is a foreign key?\""];
+  }
+
   /* ---------- main responder ---------- */
-  var SUGG=["What is a DBMS?","Difference between primary key and foreign key","Write a query to show students majoring in Data Science sorted by name","SQL vs NoSQL?","Why do I get a duplicate entry error?","How many students are in my table?","SELECT * FORM Students","Explain one-to-many relationships"];
-  function local(text){
-    var n=norm(text);
-    if(/^ (hi|hello|hey|yo|good morning|good afternoon|good evening|greetings) ?(there|helper)? $/.test(n)||/^ (hi|hello|hey) /.test(n)&&n.split(" ").length<6)
-      return ["Hello! I am the DB Helper. Ask me about databases, SQL, keys, relationships, or the student table on this page. For example: \"Write a query to show students majoring in Data Science\"."];
-    if(/ (thanks|thank you|thx|ty) /.test(n))return ["You are welcome! Ask me anything else about databases or SQL."];
-    if(/^ (bye|goodbye|see you) /.test(n))return ["Goodbye! Good luck with your database studies."];
-    /* pasted SQL */
+  var SUGG=["Tell me a joke","Explain primary keys simply","What is a DBMS?","Write a query to show students majoring in Data Science sorted by name","Why do I get a duplicate entry error?","How many students are in my table?","Give me a fun fact","How are you?"];
+  var TESTS=["What is a DBMS?","Difference between primary key and foreign key","Write a query to show students majoring in Data Science sorted by name","SQL vs NoSQL?","Why do I get a duplicate entry error?","How many students are in my table?","SELECT * FORM Students","Explain one-to-many relationships"];
+
+  function dbLocal(text,n,c){
     var sql=extractSQL(text);
-    if(sql&&(/^\s*(select|insert|update|delete|create|selct|slect|selet|insrt|inset|isert|delet|updat|upate)\b/i.test(sql))&&sql.split(/\s+/).length>=2&&!/^ (what|how|why|when|which|explain|difference)/.test(n))
-      return sqlCheck(sql);
-    for(var i=0;i<ERR.length;i++)if(ERR[i][0].test(n.trim()))return ERR[i][1];
+    if(sql&&(/^\s*(select|insert|update|delete|create|selct|slect|selet|insrt|inset|isert|delet|updat|upate)\b/i.test(sql))&&sql.split(/\s+/).length>=2&&/\b(from|form|into|set|values|table|where)\b|\*/i.test(sql)&&!/^ (what|how|why|when|which|explain|difference)/.test(n)){ctx.last="sql";return sqlCheck(sql)}
+    for(var i=0;i<ERR.length;i++)if(ERR[i][0].test(n.trim())){ctx.last="errors";return ERR[i][1]}
     var sqlWords=/ (sql|query|queries|statement) /.test(n),verbs=/ (write|generate|build|make|give|show|need|help|create|produce|how do i|how can i|how to) /.test(n);
     var studentCtx=/ (student|students|record|records|major|majors) /.test(n);
     var explainOnly=/ (what is|what are|what does|explain|difference|meaning|define) /.test(n)&&!/ (write|generate|build|give|show me|make) /.test(n);
-    if(!explainOnly&&sqlWords&&verbs&&(studentCtx||/ (select|insert|update|delete|add|remove|change|count|sort) /.test(n)))return genSQL(text,n);
+    if(!explainOnly&&sqlWords&&verbs&&(studentCtx||/ (select|insert|update|delete|add|remove|change|count|sort) /.test(n))){ctx.last="sql";return genSQL(text,n)}
     var ht=/ (how do i|how can i|how to|how would i|how do you) /.test(n)&&/ (student|students|record|records|row|table) /.test(n)&&!sqlWords?howTo(n):null;
-    if(ht)return ht;
+    if(ht){ctx.last="stu";return ht}
     var liveIntent=/ (how many|count|number of|list|who|which|is there|are there|do we have|what majors|all students|any students|currently|show) /.test(n)&&/ (student|students|record|records|table|majors?) /.test(n)&&!sqlWords&&!explainOnly&&!/ how (do|can|to) /.test(n);
-    var inMine=/ (my|in table|in database|current|currently|saved) /.test(n)||/ (how many|list|who|show|all students|is there|are there) /.test(n);
-    if(liveIntent){var la=liveAnswer(text,n);if(la)return la}
-    var kb=kbAnswer(n);
-    if(kb)return kb;
-    if(studentCtx&&/ (add|insert|delete|remove|update|change|find|list|show|count|get) /.test(n))return genSQL(text,n);
-    return ["I am not sure I understood that. I can explain databases, DBMS, tables, keys, relationships, SQL commands, SQL vs NoSQL, and common errors. I can also write basic SQL, check a statement, and answer questions about the student table.","Try rephrasing, or ask something like:","- \"What is a foreign key?\"\n- \"Write SQL to add a student named Sara Lopez\"\n- \"How do I delete a record?\""];
+    if(liveIntent){var la=liveAnswer(text,n);if(la){ctx.last="table";return la}}
+    var wc=n.trim().split(/\s+/).length;
+    if(wc<=10){
+      if(/ (example|for instance|show me one|sample) /.test(n))return followup("example",n);
+      if(/ (simpler|simple terms|simply|eli5|like im 5|dumb it down|plain english|easier|i dont understand|i do not understand|dont get it|do not get it|confused|explain again|say that again|rephrase|in other words|analogy) /.test(c))return followup("simple",n);
+      if(/^ (more|tell me more|go on|continue|what else|and then|next|anything else|what next|what should i learn next|what next) /.test(n))return followup("more",n);
+    }
+    var kb=kbBest(n),dbWord=/ (database|databases|sql|table|tables|row|rows|column|columns|record|records|query|queries|student|students|data|key|keys|command|commands|statement|field|fields|dbms|mysql|mongodb|nosql) /.test(n);
+    if(kb.s>=5||(kb.s>=2&&(dbWord||explainOnly))){ctx.last=kb.e.id;return kb.e.a}
+    if(studentCtx&&/ (add|insert|delete|remove|update|change|find|list|show|count|get) /.test(n)){ctx.last="sql";return genSQL(text,n)}
+    var q=/\?\s*$/.test(text.trim())||/^ (what|whats|who|whos|where|wheres|when|why|how|hows|can|could|do|does|is|are|will|would|should) /.test(c);
+    return [pick(q?QFALL:SFALL,"fb"),pick(OFFER,"o")];
+  }
+  function local(text){
+    var t=text.replace(/^\s*(hi|hello|hey|yo|hiya|howdy)\b[,!.\s]*/i,"");
+    if(t!==text&&t.trim().split(/\s+/).length>=3)text=t;
+    var n=norm(text),c=n.replace(/'/g,"");
+    var r=chat(text,n,c)||dbLocal(text,n,c);
+    ctx.u++;
+    return r;
   }
   window.__dbBot=local;
 
@@ -1674,14 +1871,14 @@ ORDER BY Name DESC;</code></div>
   }
   function send(text){text=text.trim();if(!text)return;addMsg("user",esc(text));reply(text)}
   function intro(){
-    addMsg("bot",fmt(["Hi! I am the DB Helper. I can explain database concepts, write and check basic SQL, explain errors, and answer questions about the student table above.","Pick a suggestion below or type your own question."]));
+    addMsg("bot",fmt(["Hi! I am the DB Helper. We can chat, or I can explain database concepts, write and check basic SQL, explain errors, and answer questions about the student table above.","Say hello, ask me anything about databases, or pick a suggestion below."]));
   }
   $("chatForm").addEventListener("submit",function(e){e.preventDefault();var v=input.value;input.value="";send(v);input.focus()});
   $("clearBtn").onclick=function(){log.innerHTML="";intro()};
   var chips=$("chips");
   SUGG.forEach(function(s){var b=document.createElement("button");b.type="button";b.textContent=s.length>44?s.slice(0,41)+"...":s;b.title=s;b.onclick=function(){send(s)};chips.appendChild(b)});
   $("testBtn").onclick=function(){
-    var i=0;(function next(){if(i>=SUGG.length)return;var q=SUGG[i++];addMsg("user",esc(q));reply(q,function(){setTimeout(next,250)})})();
+    var i=0;(function next(){if(i>=TESTS.length)return;var q=TESTS[i++];addMsg("user",esc(q));reply(q,function(){setTimeout(next,250)})})();
   };
   intro();
 })();
@@ -1691,8 +1888,12 @@ ORDER BY Name DESC;</code></div>
 
 </main>
 
+<a class="totop" href="#top" aria-label="Back to top">&uarr;</a>
 <footer>
-  <div class="wrap">Database Learning Lab. Based on Chapter 10: Database.</div>
+  <div class="wrap" style="padding-top:26px;padding-bottom:26px">
+    <span><b style="color:#fff">Database Learning Lab</b><br>Interactive learning project based on Chapter 10: Database.</span>
+    <span>Built with HTML, CSS, and JavaScript. Student data is saved in your browser.<br>Videos belong to their creators and play from YouTube.</span>
+  </div>
 </footer>
 
 <script>
@@ -1811,6 +2012,17 @@ ORDER BY Name DESC;</code></div>
     $("dlg").close();
   };
   render();
+})();
+</script>
+<script>
+(function(){
+  var links=Array.prototype.slice.call(document.querySelectorAll('.top nav a[href^="#"]'));
+  if(!("IntersectionObserver" in window)||!links.length)return;
+  var map={};links.forEach(function(a){var id=a.getAttribute("href").slice(1),el=document.getElementById(id);if(el)map[id]=a});
+  var io=new IntersectionObserver(function(es){
+    es.forEach(function(e){if(e.isIntersecting){links.forEach(function(a){a.removeAttribute("aria-current")});var a=map[e.target.id];if(a)a.setAttribute("aria-current","true")}});
+  },{rootMargin:"-30% 0px -60% 0px"});
+  Object.keys(map).forEach(function(id){io.observe(document.getElementById(id))});
 })();
 </script>
 </body>
