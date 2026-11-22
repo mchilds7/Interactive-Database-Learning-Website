@@ -199,6 +199,30 @@ textarea.sql{width:100%;min-height:130px;background:var(--ink);color:#fff;border
 .learned h5{font-family:var(--head);font-size:1rem;margin:0 0 4px}
 .learned ul{margin:0;padding-left:1.1em;font-size:.95rem}
 .learned li{margin-bottom:4px}
+/* component 7: quiz */
+.quiz{background:var(--card);border:2px solid var(--ink);border-radius:6px;padding:24px;margin-top:20px;box-shadow:6px 6px 0 var(--ink)}
+.qmeta{display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;font-weight:600;font-size:.95rem}
+.bar{height:10px;background:var(--paper);border-radius:999px;overflow:hidden;margin:8px 0 18px;border:1px solid var(--line)}
+.bar>i{display:block;height:100%;background:var(--teal);width:0;transition:width .3s}
+.qtopic{display:inline-block;background:var(--amber);border-radius:999px;padding:2px 12px;font-size:.85rem;font-weight:600;margin-bottom:8px}
+.qtext{font-family:var(--head);font-weight:600;font-size:1.3rem;line-height:1.3;margin:0 0 14px;max-width:none}
+.qopts{display:flex;flex-direction:column;gap:10px;margin:0;padding:0;list-style:none}
+.qopts button{font:inherit;width:100%;text-align:left;cursor:pointer;padding:12px 14px;border:2px solid var(--ink);border-radius:6px;background:#fff;color:var(--ink);display:flex;gap:10px;align-items:flex-start}
+.qopts button .ltr{font-family:var(--head);font-weight:800;min-width:1.4em}
+.qopts button:hover:not(:disabled){background:var(--teal-soft)}
+.qopts button:disabled{cursor:default}
+.qopts button.ok{background:#DDF1E4;border-color:#1E7A43}
+.qopts button.no{background:#F9DEDC;border-color:#B3261E}
+.qopts button .tag{margin-left:auto;font-weight:600;font-size:.85rem;white-space:nowrap}
+.fb{margin-top:16px;border-radius:4px;padding:12px 16px;border-left:6px solid var(--teal);background:var(--teal-soft)}
+.fb.good{border-left-color:#1E7A43;background:#DDF1E4}
+.fb.bad{border-left-color:#B3261E;background:#F9DEDC}
+.fb p{margin:0 0 4px;max-width:none}
+.qnav{margin-top:14px;display:flex;gap:10px}
+.score{font-family:var(--head);font-size:3rem;font-weight:800;line-height:1;margin:6px 0}
+.rev{list-style:none;padding:0;margin:14px 0 0}
+.rev li{border-top:1px solid var(--line);padding:8px 0;font-size:.97rem}
+.rev b.ok{color:#1E7A43}.rev b.no{color:#B3261E}
 </style>
 
 </head>
@@ -214,6 +238,7 @@ textarea.sql{width:100%;min-height:130px;background:var(--ink);color:#fff;border
       <a href="#sql">SQL</a>
       <a href="#types">Types</a>
       <a href="#videos">Videos</a>
+      <a href="#quiz">Quiz</a>
       <!-- More links will be added as new components are built -->
     </nav>
   </div>
@@ -1049,6 +1074,127 @@ ORDER BY Name DESC;</code></div>
       groups.forEach(function(g){g.hidden=!(t==="all"||g.getAttribute("data-t")===t)});
     });
   });
+})();
+</script>
+
+<!-- ============ COMPONENT 7: QUIZ ============ -->
+<section class="part" id="quiz">
+  <div class="wrap">
+    <h2>Database quiz</h2>
+    <p>Test what you have learned. There are 14 multiple-choice questions. You get instant feedback and an explanation after each answer, and your score is calculated automatically. The answer order is shuffled each time you play.</p>
+    <div class="quiz" id="quizBox" aria-live="polite"></div>
+  </div>
+</section>
+
+<script>
+(function(){
+  var Q=[
+   {t:"Database fundamentals",q:"What is a database?",c:"An organized collection of data that can be easily stored, searched, and updated",
+    w:["A program that only makes charts and graphs","A backup copy of a website's images","A temporary list of passwords kept in memory"],
+    e:"A database organizes data so it can be found, added, changed, and removed quickly."},
+   {t:"DBMS",q:"What is the main role of a Database Management System (DBMS)?",c:"To create, manage, and control access to a database",
+    w:["To replace the need to store any data","To design the physical computer hardware","To make web pages look attractive"],
+    e:"A DBMS is the software between users and the data. Examples are MySQL, PostgreSQL, and SQL Server."},
+   {t:"Tables, rows, and columns",q:"In a Students table, what does one row represent?",c:"One complete record, such as everything about a single student",
+    w:["One type of fact stored for all students","The name of the table","The rule that links two tables"],
+    e:"A row is a record. Each row holds all the facts about one item, such as one student."},
+   {t:"Tables, rows, and columns",q:"What is a column (field) in a table?",c:"One type of information stored for every record, such as Major",
+    w:["A complete record about one student","A separate database on another server","A SQL command"],
+    e:"A column, also called a field, holds one kind of fact. Every record has a value for it."},
+   {t:"Primary keys",q:"Which statement best describes a primary key?",c:"A field that uniquely identifies each record in a table",
+    w:["A field that holds the same value in every row","A password that protects the database","A column that can only contain text"],
+    e:"A primary key, such as Student ID, is unique for each record and cannot be empty."},
+   {t:"Foreign keys",q:"What is a foreign key?",c:"A field in one table that refers to the primary key of another table",
+    w:["A second copy of the primary key in the same table","A key that locks a table so nobody can edit it","A field that stores encrypted data"],
+    e:"A foreign key creates the link between tables. Major ID in the Students table points to the Majors table."},
+   {t:"Relational databases",q:"How does a relational database organize data?",c:"In tables whose records are linked to other tables using keys",
+    w:["As unrelated text files in folders","Only as key-value pairs kept in memory","As one long list with no structure"],
+    e:"Relational databases use tables and connect them with primary and foreign keys. They are queried with SQL."},
+   {t:"SQL commands",q:"Which SQL command adds a new record to a table?",c:"INSERT INTO",
+    w:["SELECT","UPDATE","DELETE"],
+    e:"INSERT INTO adds records, SELECT retrieves them, UPDATE changes them, and DELETE removes them."},
+   {t:"SELECT",q:"What does SELECT * FROM Students WHERE Major = 'Data Science'; return?",c:"All columns for the students whose major is Data Science",
+    w:["Only the Major column for every student","Nothing, because it deletes those students","The number of columns in the table"],
+    e:"The * means all columns, and WHERE keeps only the rows that match the condition."},
+   {t:"UPDATE",q:"What happens if you run UPDATE Students SET Major = 'History'; with no WHERE clause?",c:"Every student's major is changed to History",
+    w:["Nothing, because WHERE is required","Only the first student is changed","The Students table is deleted"],
+    e:"Without WHERE, UPDATE applies to every row. Always add a WHERE clause unless you mean to change everything."},
+   {t:"DELETE",q:"What does DELETE FROM Students WHERE StudentID = '005'; do?",c:"Removes only the record for student 005",
+    w:["Removes the entire Students table","Removes the StudentID column","Shows student 005 without changing anything"],
+    e:"DELETE removes rows, and WHERE limits it to the matching record. Deleting a whole table is a different command."},
+   {t:"Database relationships",q:"One major can have many students, and each student has one major. What type of relationship is this?",c:"One-to-many",
+    w:["One-to-one","Many-to-many","No relationship"],
+    e:"One record on the major side connects to many records on the student side. The foreign key sits on the \"many\" side."},
+   {t:"MySQL and MongoDB",q:"Which statement about MySQL and MongoDB is correct?",c:"MySQL is a relational database that uses SQL, while MongoDB is a NoSQL document database",
+    w:["Both are relational databases that only use tables","MongoDB uses SQL tables and MySQL stores JSON documents","Neither one can store data on a server"],
+    e:"MySQL stores data in tables and uses SQL. MongoDB stores flexible, JSON-like documents."},
+   {t:"Database applications",q:"A bank must record every transaction accurately and never lose or double-count money. Which is the strongest fit?",c:"A relational database with reliable transaction support",
+    w:["A spreadsheet that staff email to each other","A plain text file edited by hand","A database that never saves changes"],
+    e:"Banking needs accuracy and safe transactions, which relational databases are built to provide."}
+  ];
+  var box=document.getElementById("quizBox"),i,score,log,cur,answered;
+  function shuf(a){a=a.slice();for(var k=a.length-1;k>0;k--){var j=Math.floor(Math.random()*(k+1));var t=a[k];a[k]=a[j];a[j]=t}return a}
+  function el(tag,cls,txt){var n=document.createElement(tag);if(cls)n.className=cls;if(txt!==undefined)n.textContent=txt;return n}
+  function start(){i=0;score=0;log=[];show()}
+  function show(){
+    var q=Q[i];answered=false;box.innerHTML="";
+    cur=shuf([{x:q.c,ok:true}].concat(q.w.map(function(w){return {x:w,ok:false}})));
+    var meta=el("div","qmeta");meta.appendChild(el("span","","Question "+(i+1)+" of "+Q.length));meta.appendChild(el("span","","Score: "+score));
+    var bar=el("div","bar");var f=document.createElement("i");f.style.width=(i/Q.length*100)+"%";bar.appendChild(f);
+    bar.setAttribute("role","progressbar");bar.setAttribute("aria-valuemin","0");bar.setAttribute("aria-valuemax",Q.length);bar.setAttribute("aria-valuenow",i);
+    box.appendChild(meta);box.appendChild(bar);
+    box.appendChild(el("span","qtopic",q.t));
+    var h=el("p","qtext",q.q);h.id="qq";box.appendChild(h);
+    var ul=el("ul","qopts");
+    cur.forEach(function(o,k){
+      var li=document.createElement("li"),b=el("button");b.type="button";
+      b.appendChild(el("span","ltr","ABCD"[k]+"."));b.appendChild(el("span","",o.x));
+      b.onclick=function(){pick(k,ul)};
+      li.appendChild(b);ul.appendChild(li);
+    });
+    box.appendChild(ul);
+    var slotEl=el("div","","");slotEl.id="fbSlot";box.appendChild(slotEl);
+    ul.querySelector("button").focus({preventScroll:true});
+  }
+  function pick(k,ul){
+    if(answered)return;answered=true;
+    var q=Q[i],good=cur[k].ok;
+    if(good)score++;
+    log.push({q:q.q,ok:good,c:q.c});
+    Array.prototype.forEach.call(ul.querySelectorAll("button"),function(b,n){
+      b.disabled=true;
+      if(cur[n].ok){b.classList.add("ok");b.appendChild(el("span","tag","Correct answer"))}
+      else if(n===k){b.classList.add("no");b.appendChild(el("span","tag","Your answer"))}
+    });
+    var fb=el("div","fb "+(good?"good":"bad"));
+    fb.appendChild(el("p","",good?"Correct!":"Not quite. The correct answer is highlighted."));
+    fb.appendChild(el("p","",q.e));
+    var slot=document.getElementById("fbSlot");slot.appendChild(fb);
+    var nav=el("div","qnav");
+    var nx=el("button","btn",i===Q.length-1?"See my score":"Next question");nx.type="button";
+    nx.onclick=function(){if(i===Q.length-1){result()}else{i++;show()}};
+    nav.appendChild(nx);slot.appendChild(nav);nx.focus();
+    box.querySelector(".qmeta span:last-child").textContent="Score: "+score;
+  }
+  function result(){
+    box.innerHTML="";
+    var pct=Math.round(score/Q.length*100);
+    box.appendChild(el("p","qtopic","Quiz complete"));
+    box.appendChild(el("div","score",score+" / "+Q.length));
+    var msg=pct>=90?"Excellent work. You know your databases.":pct>=70?"Good job. Review the questions you missed to lock it in.":pct>=50?"A decent start. Revisit the sections above and try again.":"Keep going. Read the sections above, then give it another try.";
+    box.appendChild(el("p","",pct+"% correct. "+msg));
+    var ul=el("ul","rev");
+    log.forEach(function(r,n){
+      var li=document.createElement("li"),b=el("b",r.ok?"ok":"no",r.ok?"Correct. ":"Missed. ");
+      li.appendChild(b);li.appendChild(document.createTextNode((n+1)+". "+r.q));
+      if(!r.ok)li.appendChild(el("div","hint","Answer: "+r.c));
+      ul.appendChild(li);
+    });
+    box.appendChild(ul);
+    var nav=el("div","qnav");var rs=el("button","btn","Restart quiz");rs.type="button";rs.onclick=start;
+    nav.appendChild(rs);box.appendChild(nav);rs.focus();
+  }
+  start();
 })();
 </script>
 
