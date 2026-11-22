@@ -223,7 +223,32 @@ textarea.sql{width:100%;min-height:130px;background:var(--ink);color:#fff;border
 .rev{list-style:none;padding:0;margin:14px 0 0}
 .rev li{border-top:1px solid var(--line);padding:8px 0;font-size:.97rem}
 .rev b.ok{color:#1E7A43}.rev b.no{color:#B3261E}
+/* component 8: chatbot */
+.chat{background:var(--card);border:2px solid var(--ink);border-radius:6px;margin-top:20px;box-shadow:6px 6px 0 var(--ink);display:flex;flex-direction:column;overflow:hidden}
+.chathead{background:var(--ink);color:#fff;padding:10px 16px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.chathead b{font-family:var(--head)}
+.chathead .btn{background:#fff;color:var(--ink);padding:4px 12px;font-size:.9rem}
+.chathead .btn:hover{background:var(--amber);border-color:var(--ink)}
+#chatLog{height:440px;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px;background:var(--paper)}
+.msg{max-width:86%;padding:10px 14px;border-radius:10px;font-size:.98rem;line-height:1.5}
+.msg p{margin:0 0 .6em;max-width:none}
+.msg p:last-child,.msg ul:last-child,.msg pre:last-child{margin-bottom:0}
+.msg ul{margin:0 0 .6em;padding-left:1.2em}
+.msg pre{margin:0 0 .6em;background:var(--ink);color:#fff;border-radius:4px;padding:10px 12px;overflow-x:auto;font-size:.88rem;line-height:1.5;font-family:Consolas,Menlo,"Courier New",monospace}
+.msg code{font-family:Consolas,Menlo,"Courier New",monospace;background:rgba(27,42,58,.1);border-radius:3px;padding:0 4px;font-size:.9em}
+.msg pre code{background:none;padding:0}
+.msg.bot{align-self:flex-start;background:#fff;border:2px solid var(--teal)}
+.msg.user{align-self:flex-end;background:var(--ink);color:#fff}
+.msg .who{display:block;font-size:.75rem;font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px;opacity:.75}
+.msg.typing{font-style:italic;color:var(--muted)}
+.chips2{display:flex;flex-wrap:wrap;gap:8px;padding:10px 16px;border-top:2px solid var(--line);background:#fff}
+.chips2 button{font:inherit;font-size:.88rem;cursor:pointer;padding:4px 12px;border:2px solid var(--teal);border-radius:999px;background:#fff;color:var(--ink)}
+.chips2 button:hover{background:var(--teal-soft)}
+.chatform{display:flex;gap:10px;padding:12px 16px;border-top:2px solid var(--ink);background:#fff}
+.chatform input{flex:1}
+@media(max-width:600px){.msg{max-width:96%}}
 </style>
+
 
 </head>
 <body>
@@ -239,6 +264,7 @@ textarea.sql{width:100%;min-height:130px;background:var(--ink);color:#fff;border
       <a href="#types">Types</a>
       <a href="#videos">Videos</a>
       <a href="#quiz">Quiz</a>
+      <a href="#chatbot">Chatbot</a>
       <!-- More links will be added as new components are built -->
     </nav>
   </div>
@@ -1195,6 +1221,469 @@ ORDER BY Name DESC;</code></div>
     nav.appendChild(rs);box.appendChild(nav);rs.focus();
   }
   start();
+})();
+</script>
+
+<!-- ============ COMPONENT 8: CHATBOT ============ -->
+<section class="part" id="chatbot">
+  <div class="wrap">
+    <h2>Database chatbot</h2>
+    <p>Ask the DB Helper about databases and SQL. It can explain concepts, write basic SQL for you, check a SQL statement for mistakes, explain common errors, and answer questions about the student table on this page.</p>
+    <div class="storage">
+      <p><b>How the chatbot works:</b> it is a <b>rule-based assistant that runs entirely in your browser</b>. It does not call an external AI service, so no API key is stored in this page. It matches your question to a built-in knowledge base, builds SQL from your description, checks pasted SQL for common mistakes, and reads the student records saved in your browser. It can only answer within those topics.</p>
+    </div>
+
+    <div class="chat">
+      <div class="chathead"><b>DB Helper</b>
+        <span><button class="btn" type="button" id="testBtn">Run 8 test questions</button> <button class="btn" type="button" id="clearBtn">Clear chat</button></span>
+      </div>
+      <div id="chatLog" role="log" aria-live="polite" aria-label="Chat messages" tabindex="0"></div>
+      <div class="chips2" id="chips" aria-label="Suggested questions"></div>
+      <form class="chatform" id="chatForm">
+        <label for="chatIn" class="sr" style="position:absolute;left:-9999px">Type your question</label>
+        <input id="chatIn" type="text" autocomplete="off" placeholder="Ask about databases, SQL, keys, errors...">
+        <button class="btn" type="submit">Send</button>
+      </form>
+    </div>
+  </div>
+</section>
+
+<script>
+(function(){
+  /* Optional: to use a real AI model, create your OWN server-side function that holds the API key,
+     and put that function's URL here. NEVER put an API key in this file. It expects {reply:"text"}. */
+  var AI_PROXY_URL="";
+
+  var $=function(i){return document.getElementById(i)};
+  function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
+  function inline(s){return esc(s).replace(/\*\*(.+?)\*\*/g,"<b>$1</b>").replace(/`([^`]+)`/g,"<code>$1</code>")}
+  function fmt(blocks){
+    return blocks.map(function(b){
+      if(b.indexOf("SQL:")===0)return "<pre><code>"+esc(b.slice(4))+"</code></pre>";
+      if(b.indexOf("- ")===0)return "<ul>"+b.split("\n").map(function(l){return "<li>"+inline(l.replace(/^- /,""))+"</li>"}).join("")+"</ul>";
+      return "<p>"+inline(b)+"</p>";
+    }).join("");
+  }
+
+  /* ---------- live student data (same storage the table above uses) ---------- */
+  var SAMPLE=[["001","John Smith","Computer Science"],["002","Jane Doe","Information Technology"],["003","Michael Brown","Data Science"],["004","Emily Wilson","Cybersecurity"],["005","David Johnson","Artificial Intelligence"]];
+  function students(){
+    try{var d=JSON.parse(localStorage.getItem("dbLab.students.v1"));if(Array.isArray(d))return d}catch(e){}
+    return SAMPLE.map(function(r){return {id:r[0],name:r[1],major:r[2]}});
+  }
+  function uniq(a){return a.filter(function(x,i){return a.indexOf(x)===i})}
+  function knownMajors(){return uniq(students().map(function(s){return s.major}).concat(SAMPLE.map(function(r){return r[2]})))}
+
+  /* ---------- text helpers ---------- */
+  function norm(t){return " "+t.toLowerCase().replace(/[^a-z0-9%_*=<>']+/g," ").replace(/\b(a|an|the)\b/g," ").replace(/\s+/g," ").trim()+" "}
+  function has(n,re){return re.test(n)}
+  function title(s){return s.replace(/\b[a-z]/g,function(c){return c.toUpperCase()})}
+
+  /* ---------- knowledge base ---------- */
+  var KB=[
+   {id:"db",kw:["what is database|6","define database|5","explain database|4","database|1","databases|1"],a:[
+     "A **database** is an organized collection of data stored so it can be found, added, changed, and removed quickly. Think of a digital filing cabinet that can answer questions in a fraction of a second.",
+     "Most databases keep data in **tables** made of rows and columns. The student table on this page has three fields: Student ID, Name, and Major.",
+     "Databases matter because they keep data accurate, searchable, shared by many users at once, and secure. Banks, hospitals, online shops, and universities all depend on them."]},
+   {id:"dbms",kw:["dbms|6","database management system|6","database management systems|6"],a:[
+     "A **Database Management System (DBMS)** is the software that sits between people and the stored data. Users and apps send requests to the DBMS, and the DBMS reads or writes the data for them.",
+     "A DBMS does several jobs:\n- Creates and organizes databases\n- Answers queries (for example, SQL)\n- Controls who may see or change data\n- Keeps data consistent when many people edit at once\n- Backs up and recovers data",
+     "Examples: MySQL, PostgreSQL, Microsoft SQL Server, Oracle, SQLite (relational) and MongoDB, Redis (NoSQL). The database is the data. The DBMS is the software that manages it."]},
+   {id:"sheet",kw:["spreadsheet|5","excel|4","database vs spreadsheet|9","difference between database and spreadsheet|9","spreadsheets|5"],a:[
+     "Spreadsheets and databases both use rows and columns, but they are built for different jobs.",
+     "- **Spreadsheets** suit calculations, charts, and small lists that one person edits.\n- **Databases** suit large, connected data that many people use at once. They enforce rules (types, unique IDs), link tables with keys so data is stored once, and answer questions with SQL.",
+     "Example: a spreadsheet can list students. A database can also connect each student to courses, grades, and bills without copying their name everywhere."]},
+   {id:"table",kw:["table|1","tables|1","row|2","rows|2","column|2","columns|2","record|2","records|2","field|2","fields|2","what is table|6","what is record|6","what is field|6","rows and columns|6","records and fields|6"],a:[
+     "These words describe how a table is laid out:",
+     "- **Table**: data about one kind of thing, such as Students.\n- **Row = record**: one complete entry, such as everything about John Smith.\n- **Column = field**: one kind of fact stored for every record, such as Major.",
+     "Example from the student table: the row `001 | John Smith | Computer Science` is one record with three fields. Select a column heading in the table above to sort by that field."]},
+   {id:"pk",kw:["primary key|7","primary keys|7","pk|2","unique identifier|3"],a:[
+     "A **primary key** is a field (or fields) that uniquely identifies each record in a table. In the student table, Student ID is the primary key.",
+     "Rules: it must be unique, and it can never be empty. That is why the student table on this page rejects a duplicate Student ID, and why the ID cannot be changed while editing.",
+     "SQL:CREATE TABLE Students (\n  StudentID VARCHAR(6) PRIMARY KEY,\n  Name VARCHAR(40),\n  Major VARCHAR(40)\n);"]},
+   {id:"fk",kw:["foreign key|7","foreign keys|7","fk|2","referential integrity|5"],a:[
+     "A **foreign key** is a field in one table that holds the primary key of a record in another table. It is what links the tables together.",
+     "Example: the Students table has a Major ID column (the foreign key). Each value, like CS01, matches the Major ID primary key in the Majors table, which says the name is Computer Science.",
+     "The database can enforce this link (referential integrity): you cannot assign a student to a Major ID that does not exist, and you cannot delete a major that students still use."]},
+   {id:"pkfk",kw:["difference between primary key and foreign key|12","primary key and foreign key|9","primary vs foreign|11","primary key vs foreign key|11","foreign key vs primary key|11","primary and foreign|9"],a:[
+     "Both are keys, but they do different jobs:",
+     "- **Primary key**: identifies each record in its **own** table. It must be unique and cannot be empty. Example: StudentID in Students.\n- **Foreign key**: points to a record in **another** table by holding that table's primary key. It can repeat. Example: MajorID in Students, where many students can share CS01.",
+     "A table has one primary key, but it can have several foreign keys."]},
+   {id:"rel",kw:["relationship|5","relationships|5","one to many|8","one to one|8","many to many|8","cardinality|5","how tables connect|6","how tables connected|6","connect tables|5"],a:[
+     "A **relationship** links two tables, usually by matching a foreign key to a primary key. There are three types:",
+     "- **One-to-one**: one record matches exactly one record. Example: a student and their single ID card.\n- **One-to-many**: one record matches many. Example: one major has many students. The foreign key sits on the \"many\" side (Students.MajorID).\n- **Many-to-many**: many match many. Example: students and courses. It needs a third **link table** (such as Enrollments) holding StudentID and CourseID.",
+     "The Structure section above shows a one-to-many diagram between Majors and Students."]},
+   {id:"join",kw:["join|6","joins|6","inner join|8","left join|8","combine tables|6","combine two tables|7"],a:[
+     "A **JOIN** combines rows from two tables by matching a foreign key to a primary key.",
+     "SQL:SELECT Students.Name, Majors.MajorName\nFROM Students\nINNER JOIN Majors\n  ON Students.MajorID = Majors.MajorID;",
+     "This returns each student with the full name of their major. INNER JOIN keeps only rows with a match on both sides. LEFT JOIN keeps every row from the left table even if there is no match. Note: the practice SQL demo above supports single-table queries only, but real MySQL and PostgreSQL support joins."]},
+   {id:"sql",kw:["what is sql|8","structured query language|8","sql basics|5","sql commands|4","sql|1","basic sql|4"],a:[
+     "**SQL (Structured Query Language)** is the standard language for working with relational databases. You describe what you want, and the DBMS works out how to do it.",
+     "The core commands:\n- `CREATE TABLE`: build a table\n- `INSERT INTO`: add records\n- `SELECT`: read records\n- `UPDATE`: change records\n- `DELETE`: remove records\n- `WHERE` filters and `ORDER BY` sorts",
+     "Try them in the SQL demo section above, or ask me to write a query, for example: \"write a query to show students majoring in Data Science\"."]},
+   {id:"select",kw:["select|5","retrieve data|4","read data|3"],a:[
+     "`SELECT` retrieves records without changing them.",
+     "SQL:SELECT * FROM Students;\nSELECT Name, Major FROM Students\nWHERE Major = 'Data Science'\nORDER BY Name;",
+     "`*` means all columns. List column names to get only those. Add `WHERE` to filter rows and `ORDER BY` to sort them."]},
+   {id:"insert",kw:["insert|5","insert into|7","add record|4","add data|3"],a:[
+     "`INSERT INTO` adds a new record to a table.",
+     "SQL:INSERT INTO Students (StudentID, Name, Major)\nVALUES ('006', 'Sara Lopez', 'Computer Science');",
+     "Text values go in single quotes, and values must be in the same order as the column list. If the primary key already exists, the database rejects the insert."]},
+   {id:"update",kw:["update|5","modify data|3","change data|3"],a:[
+     "`UPDATE` changes values in records that already exist.",
+     "SQL:UPDATE Students\nSET Major = 'Data Science'\nWHERE StudentID = '001';",
+     "**Always include WHERE.** Without it, every row in the table is changed."]},
+   {id:"delete",kw:["delete|5","delete from|7","remove record|4","remove data|3"],a:[
+     "`DELETE FROM` removes records from a table.",
+     "SQL:DELETE FROM Students\nWHERE StudentID = '005';",
+     "**Always include WHERE.** Without it, every row is deleted. A good habit is to run a `SELECT` with the same WHERE first, to see exactly which rows will be removed. (`DROP TABLE` is different: it removes the whole table.)"]},
+   {id:"create",kw:["create table|8","make table|5","new table|4","define table|4"],a:[
+     "`CREATE TABLE` builds a new table and defines its columns, their data types, and the primary key.",
+     "SQL:CREATE TABLE Courses (\n  CourseID VARCHAR(6) PRIMARY KEY,\n  Title VARCHAR(40),\n  Credits INT\n);",
+     "Common types: `INT` for whole numbers, `VARCHAR(n)` for text up to n characters, `DATE` for dates, `DECIMAL` for money."]},
+   {id:"where",kw:["where|5","filter|4","condition|3","like|3"],a:[
+     "`WHERE` filters which rows a command applies to.",
+     "SQL:SELECT * FROM Students WHERE Major = 'Cybersecurity';\nSELECT * FROM Students WHERE StudentID > '002';\nSELECT * FROM Students WHERE Name LIKE 'J%';\nSELECT * FROM Students WHERE Major = 'Data Science' AND StudentID < '005';",
+     "Use `=`, `!=`, `<`, `>`, `<=`, `>=`, `LIKE` (with `%` as a wildcard), and combine conditions with `AND` and `OR`. Text values need single quotes."]},
+   {id:"order",kw:["order by|7","sort|4","sorting|4","ascending|3","descending|3"],a:[
+     "`ORDER BY` sorts query results. `ASC` is A to Z or smallest first (the default). `DESC` is Z to A or largest first.",
+     "SQL:SELECT * FROM Students\nORDER BY Name DESC;",
+     "It goes after WHERE: the database filters first, then sorts what is left."]},
+   {id:"agg",kw:["count|4","group by|7","sum|3","average|4","avg|4","aggregate|6","max|3","min|3"],a:[
+     "Aggregate functions summarize many rows into one value: `COUNT`, `SUM`, `AVG`, `MIN`, and `MAX`. `GROUP BY` does it per group.",
+     "SQL:SELECT COUNT(*) FROM Students;\nSELECT Major, COUNT(*) AS Total\nFROM Students\nGROUP BY Major;",
+     "These work in real MySQL and PostgreSQL. The practice SQL demo above only supports the seven basic commands."]},
+   {id:"nosql",kw:["sql vs nosql|12","nosql|6","no sql|6","difference between sql and nosql|12","sql and nosql|9","relational vs nosql|10","non relational|6","relational and nosql|8"],a:[
+     "**SQL (relational)** databases store data in tables with a fixed structure and link tables with keys. **NoSQL** databases store data in flexible formats such as documents, key-value pairs, wide columns, or graphs.",
+     "- **Structure**: fixed schema vs flexible schema\n- **Relationships**: strong, with joins vs often nested data\n- **Consistency**: strong ACID transactions vs often relaxed for speed (it varies)\n- **Scaling**: traditionally a bigger server vs typically more servers\n- **Best for**: accurate structured data vs huge or changing data",
+     "Examples: MySQL, PostgreSQL, SQL Server (SQL) and MongoDB, Redis, Cassandra (NoSQL). The line is blurring, since PostgreSQL can store JSON and MongoDB supports transactions. See the comparison table in the Types section."]},
+   {id:"mm",kw:["mysql vs mongodb|12","mysql and mongodb|12","mongodb|6","mongo|4","mysql|6"],a:[
+     "**MySQL** is a relational database. Data lives in tables, you query it with SQL, and it is popular for websites and business systems.",
+     "**MongoDB** is a NoSQL document database. It stores flexible, JSON-like documents, so records in the same collection can have different fields. It is popular for fast-changing apps and large volumes of varied data.",
+     "SQL:-- the same student as a MongoDB document\n{ \"studentId\": \"001\", \"name\": \"John Smith\",\n  \"major\": \"Computer Science\" }"]},
+   {id:"relational",kw:["relational database|7","relational databases|7","rdbms|6","relational|3"],a:[
+     "A **relational database** organizes data into tables (relations) of rows and columns, and connects the tables with primary and foreign keys. It is queried with SQL and usually follows ACID rules for reliable transactions.",
+     "It suits structured data where accuracy matters, such as banking, student records, inventory, and hospital systems. Examples: MySQL, PostgreSQL, SQL Server, Oracle."]},
+   {id:"cloud",kw:["cloud database|8","cloud|4","dbaas|5","amazon rds|5","managed database|5"],a:[
+     "A **cloud database** runs on a cloud provider's servers and is used over the internet, usually as a managed service. It can be relational or NoSQL, since \"cloud\" describes where it runs, not how data is organized.",
+     "Benefits: little setup, automatic backups and updates, easy scaling, and pay-as-you-go pricing. Examples: Amazon RDS, Azure SQL Database, Google Cloud SQL, MongoDB Atlas."]},
+   {id:"dist",kw:["distributed|6","sharding|6","replication|5","replica|4"],a:[
+     "A **distributed database** is one logical database whose data is spread across several servers, often in different places. Data is **sharded** (split up) and **replicated** (copied) so the system keeps working if a server fails and can grow by adding servers.",
+     "The trade-off is balancing consistency against availability. Examples: Apache Cassandra, CockroachDB, Google Cloud Spanner."]},
+   {id:"norm",kw:["normalization|7","normalize|6","redundancy|4","duplicate data|3","normal form|6"],a:[
+     "**Normalization** is organizing tables to reduce repeated data. Instead of typing \"Computer Science\" beside every student, you store a Major ID in Students and keep the full name once in Majors.",
+     "Benefits: less wasted space, fewer typing inconsistencies, and one place to fix a change (rename a major once and every student is updated). Common steps are called first, second, and third normal form."]},
+   {id:"acid",kw:["acid|6","transaction|5","transactions|5","commit|3","rollback|4"],a:[
+     "A **transaction** is a group of steps that must succeed together or not at all, such as moving money between two bank accounts. **ACID** describes the guarantees:",
+     "- **Atomicity**: all steps happen or none do\n- **Consistency**: data stays valid under the rules\n- **Isolation**: simultaneous users do not interfere\n- **Durability**: once saved, it survives a crash"]},
+   {id:"howto_gen",kw:["how to write query|8","write sql|6","write query|6","basic sql query|6","help write|4"],a:[
+     "I can write basic SQL from a plain description. Try something like:",
+     "- \"Write a query to show students majoring in Data Science\"\n- \"Give me SQL to add a student named Sara Lopez in Computer Science\"\n- \"Write SQL to change the major of student 001 to Biology\"\n- \"Write SQL to delete student 005\"",
+     "A reliable recipe: choose the command (SELECT, INSERT, UPDATE, DELETE), name the table, then add a WHERE to limit the rows and an ORDER BY to sort."]},
+   {id:"errors",kw:["common errors|9","common database errors|10","common sql errors|10","error|3","errors|3","mistake|3","mistakes|3","not working|4","troubleshoot|5","debug|4"],a:[
+     "These are the most common SQL and database mistakes:",
+     "- **Missing quotes**: text needs single quotes. `Major = 'Data Science'`, not `Major = Data Science`.\n- **Typos** in keywords, table names, or column names (`FORM` instead of `FROM`).\n- **Forgetting WHERE** on UPDATE or DELETE, which changes or removes every row.\n- **Duplicate primary key**: inserting an ID that already exists.\n- **Foreign key violation**: pointing to a record that does not exist.\n- **Wrong value type**, such as text in a number column.\n- **Missing comma or parenthesis** in a long statement.",
+     "Paste your SQL here (for example `SELECT * FORM Students`) or paste the error message, and I will explain what went wrong."]},
+   {id:"howsql",kw:["practice data|5","sandbox|6","sql demo|6","run sql|5","simulated|5","simulated sql|8"],a:[
+     "The SQL demo section is a **simulated SQL environment**: a small SQL interpreter written in JavaScript runs in your browser on a practice copy of the Students data. It supports CREATE TABLE, INSERT INTO, SELECT, UPDATE, DELETE, WHERE, and ORDER BY.",
+     "It never changes the student table above. If you run an example that fails, check that the table exists first (run the CREATE TABLE example before inserting into Courses), or use Reset practice data."]},
+   {id:"store",kw:["localstorage|8","local storage|8","where is data stored|9","where data stored|9","is data saved|8","real database|5","data saved|6","after refresh|6","disappear|5","storage|3"],a:[
+     "The student table uses temporary sample data plus your browser's **localStorage**. Your changes are saved in your own browser and survive a page refresh, but they stay on your device and are not shared with other visitors.",
+     "It is not a real database server like MySQL. The \"Reset sample data\" button restores the original five students."]},
+   {id:"stu",kw:["student database|7","student table|7","student records|7","interactive table|8","interactive database|8","this website|4","this site|4","this page|4","what can i do here|6"],a:[
+     "The interactive student table works like a small database. Each row is a record with three fields (Student ID, Name, Major). You can:",
+     "- **Add** a student with the Add student button\n- **Edit** or **Delete** with the buttons on each row (delete asks for confirmation)\n- **Search** by name, ID, or major\n- **Sort** by clicking a column heading\n- **Filter** by major with the dropdown\n- See the **total record count** above the table",
+     "Input is validated: IDs must be 1 to 6 digits, names must use letters, and duplicate IDs are rejected because Student ID is the primary key. You can also ask me questions about it, such as \"how many students are in my table?\"."]},
+   {id:"quizvid",kw:["quiz|5","videos|5","video|5","test myself|5"],a:[
+     "Scroll to the **Video center** to watch short lessons, each with notes on what was learned, and to the **Quiz** to test yourself with 14 questions. I am also happy to explain any quiz topic you find tricky."]},
+   {id:"help",kw:["help|2","what can you do|10","what can you answer|10","capabilities|6","topics|4","what do you know|8"],a:[
+     "I can help with:",
+     "- Databases, DBMS, tables, records, and fields\n- Primary keys, foreign keys, and relationships\n- SQL commands, and **writing basic queries** from a description\n- **Checking your SQL** for mistakes and explaining error messages\n- SQL vs NoSQL, MySQL, MongoDB, cloud and distributed databases\n- Your **student table** on this page (counts, lists, lookups, how-to)",
+     "Try: \"Write SQL to show students sorted by name\" or \"Why do I get a duplicate entry error?\""]}
+  ];
+  KB.forEach(function(e){e.k=e.kw.map(function(s){var p=s.split("|");return {t:p[0],w:Number(p[1])}})});
+
+  function kbAnswer(n){
+    var best=null,bs=0;
+    KB.forEach(function(e){
+      var sc=0;
+      e.k.forEach(function(k){if(n.indexOf(" "+k.t+" ")>=0)sc+=k.w});
+      if(sc>bs){bs=sc;best=e}
+    });
+    return bs>=2?best.a:null;
+  }
+
+  /* ---------- error message guidance ---------- */
+  var ERR=[
+   [/duplicate (entry|key|primary)|already exists|unique constraint|primary key violation/,[
+     "That error means you tried to insert a record whose **primary key already exists**. Primary keys must be unique, so the database refuses the duplicate.",
+     "Fix: choose an ID that is not used yet, or use `UPDATE` if you meant to change the existing record. To find a free ID, check what exists first:",
+     "SQL:SELECT * FROM Students WHERE StudentID = '006';"]],
+   [/unknown column|no such column|column .{0,30}(does not exist|not found)|invalid column/,[
+     "The database cannot find a column with that name. Usually it is a **typo** or the column belongs to a different table.",
+     "Fix: check the spelling and compare with the table's real columns. In the student table they are StudentID, Name, and Major."]],
+   [/(table .{0,40}(does not exist|doesn t exist|not found))|no such table|unknown table|invalid object name/,[
+     "The table you named does not exist, at least not yet. Check the spelling, make sure you are in the right database, and make sure `CREATE TABLE` ran first.",
+     "In the practice SQL demo, run the CREATE TABLE Courses example before inserting into Courses."]],
+   [/syntax error|error in your sql syntax|near .{0,30}at line|incorrect syntax/,[
+     "A **syntax error** means the statement is not written in valid SQL. Check these in order:",
+     "- Keywords spelled correctly (`SELECT`, `FROM`, `WHERE`)\n- Text values in single quotes\n- Commas between items, but none before `FROM`\n- Parentheses closed\n- Clauses in the right order: SELECT, FROM, WHERE, ORDER BY",
+     "Paste the statement here and I will check it."]],
+   [/foreign key constraint|cannot add or update (a )?child row|violates foreign key|referential/,[
+     "A **foreign key violation** means the value you used does not exist in the table it points to, or you tried to delete a record other tables still reference.",
+     "Fix: insert the parent record first (for example the major in Majors), then the child record (the student). To delete a parent, remove or reassign its child records first."]],
+   [/cannot be null|not null|null value|can t be empty/,[
+     "A column marked NOT NULL (and every primary key) must always have a value. Provide a value for that column in your INSERT, or remove the NOT NULL rule if empty values should be allowed."]],
+   [/access denied|permission denied|not authorized|privilege/,[
+     "That is a **permissions** error. The database account you are using is not allowed to do that action. Check the username and password, and ask the database administrator to grant the needed privilege."]],
+   [/data too long|incorrect integer|invalid input syntax|truncated|out of range|wrong type/,[
+     "A value does not fit its column. Either the text is longer than the VARCHAR limit, or you put text in a number column. Check the column's data type and shorten or convert the value."]]
+  ];
+
+  /* ---------- SQL checker ---------- */
+  var TYPOS={selct:"SELECT",slect:"SELECT",selet:"SELECT",form:"FROM",fro:"FROM",wehre:"WHERE",whre:"WHERE",were:"WHERE",delet:"DELETE",updat:"UPDATE",upate:"UPDATE",isert:"INSERT",insrt:"INSERT",inset:"INSERT",valuse:"VALUES",vlaues:"VALUES",vaules:"VALUES",oder:"ORDER",ordr:"ORDER"};
+  function extractSQL(text){
+    var m=text.match(/(?:^|[:\n]\s*)((?:select|insert|update|delete|create\s+table|selct|slect|selet|insrt|inset|isert|delet|updat|upate)\b[\s\S]{3,})/i);
+    return m?m[1].trim():null;
+  }
+  function lint(sql){
+    var f=[],s=sql.replace(/\s+/g," ").trim(),u=s.toUpperCase(),first=u.split(" ")[0].replace(/;$/,"");
+    var toks=s.replace(/'[^']*'/g," ").split(/[^A-Za-z_]+/).filter(Boolean);
+    toks.forEach(function(t){var k=t.toLowerCase();if(TYPOS[k]&&!(k==="form"&&!/^select/i.test(s))&&!(k==="were"&&false))f.push("**Possible typo:** `"+t+"` should probably be `"+TYPOS[k]+"`.")});
+    if((s.match(/'/g)||[]).length%2)f.push("**Unclosed quote:** there is an odd number of single quotes. Every text value needs an opening and a closing quote.");
+    if(/"[^"]*"/.test(s)&&!/'/.test(s))f.push("**Double quotes:** standard SQL uses single quotes for text values, like `'Data Science'`. Some systems accept double quotes, but they are meant for names.");
+    if(/==/.test(s))f.push("**Double equals:** SQL compares with a single `=`, not `==`.");
+    if(/(=|<>|!=|<|>|LIKE)\s*[A-Za-z_][A-Za-z_ ]*(?=\s+(AND|OR|ORDER|GROUP|;)|\s*;?$)/i.test(s.replace(/'[^']*'/g,"''"))&&!/=\s*(NULL)\b/i.test(s)){
+      if(/(=|<>|!=|LIKE)\s*[A-Za-z_]/i.test(s.replace(/'[^']*'/g,"''").replace(/\b(\w+)\s*(=)\s*(\w+)\.\w+/,"")))f.push("**Missing quotes:** a text value after a comparison needs single quotes, for example `Major = 'Data Science'`.");
+    }
+    if(/,\s*FROM\b/i.test(s))f.push("**Extra comma:** remove the comma just before `FROM`.");
+    if(first==="SELECT"&&!/\bFROM\b/i.test(s)&&!/\bFORM\b/i.test(s)&&!/^SELECT\s+[\d'(]/i.test(s))f.push("**Missing FROM:** a SELECT needs `FROM table_name` to say where the data comes from.");
+    if(/\bFROM\s*(WHERE|ORDER|;|$)/i.test(s))f.push("**Missing table name:** nothing follows `FROM`.");
+    if(first==="UPDATE"&&!/\bSET\b/i.test(s))f.push("**Missing SET:** an UPDATE needs `SET column = value`.");
+    if(first==="DELETE"&&!/^DELETE\s+FROM\b/i.test(s))f.push("**Missing FROM:** the form is `DELETE FROM table_name WHERE ...`.");
+    if(first==="INSERT"&&!/\bINTO\b/i.test(s))f.push("**Missing INTO:** the form is `INSERT INTO table_name ... VALUES (...)`.");
+    if(first==="INSERT"&&!/\bVALUES\b/i.test(s))f.push("**Missing VALUES:** an INSERT needs `VALUES (...)` with the data to add.");
+    if(first==="INSERT"){var o=(s.match(/\(/g)||[]).length,c=(s.match(/\)/g)||[]).length;if(o!==c)f.push("**Unbalanced parentheses:** every `(` needs a matching `)`.")}
+    if((first==="UPDATE"||first==="DELETE")&&!/\bWHERE\b/i.test(s))f.push("**Warning, no WHERE:** this will affect **every row** in the table. Add a WHERE clause unless that is really what you want.");
+    return f;
+  }
+  function explainSQL(sql){
+    var s=sql.replace(/\s+/g," ").trim(),u=s.toUpperCase();
+    var tbl=(s.match(/\b(?:FROM|INTO|UPDATE|TABLE)\s+([A-Za-z_]\w*)/i)||[])[1]||"the table";
+    if(/^SELECT/.test(u)){
+      var out=["This **retrieves** "+(/^SELECT\s+\*/i.test(s)?"all columns":"the listed columns")+" from "+tbl+"."];
+      if(/\bWHERE\b/i.test(s))out.push("`WHERE` keeps only rows that match the condition.");
+      if(/\bORDER BY\b/i.test(s))out.push("`ORDER BY` sorts the result"+(/\bDESC\b/i.test(s)?" from Z to A (or largest first).":" from A to Z (or smallest first)."));
+      return out;
+    }
+    if(/^INSERT/.test(u))return ["This **adds** a new record to "+tbl+". Values go in the same order as the column list."];
+    if(/^UPDATE/.test(u))return ["This **changes** existing values in "+tbl+(/\bWHERE\b/i.test(s)?", only for rows matching the WHERE condition.":", for every row.")];
+    if(/^DELETE/.test(u))return ["This **removes** records from "+tbl+(/\bWHERE\b/i.test(s)?", only those matching the WHERE condition.":", all of them.")];
+    if(/^CREATE/.test(u))return ["This **creates** a new table named "+tbl+" with the columns you define."];
+    return [];
+  }
+  function sqlCheck(sql){
+    var f=lint(sql),out=[];
+    if(f.length){out.push("I checked your statement and found "+(f.length===1?"1 thing":f.length+" things")+" to look at:");out.push("- "+f.join("\n- "))}
+    else out.push("I do not see any common mistakes in that statement. Make sure the table and column names match your database.");
+    var ex=explainSQL(sql);
+    if(ex.length){out.push("Here is what it does:");out.push("- "+ex.join("\n- "))}
+    return out;
+  }
+
+  /* ---------- SQL generator ---------- */
+  function parseWhere(text,n){
+    var where=[],notes=[],S=students(),majors=knownMajors();
+    var mj=null;
+    majors.forEach(function(m){if(n.indexOf(" "+m.toLowerCase()+" ")>=0&&(!mj||m.length>mj.length))mj=m});
+    if(mj){where.push("Major = '"+mj+"'");notes.push("`Major = '"+mj+"'` keeps only students in that major.")}
+    var cmpm=n.match(/ id (greater than|more than|above|over|after|bigger than|less than|below|under|before|smaller than) (\d{1,6}) /);
+    var idm=n.match(/ (?:id|number|student) (?:is |equals |= |of )?(\d{1,6}) /);
+    if(cmpm){var gt=/greater|more|above|over|after|bigger/.test(cmpm[1]);where.push("StudentID "+(gt?">":"<")+" '"+cmpm[2]+"'");notes.push("`StudentID "+(gt?">":"<")+" '"+cmpm[2]+"'` compares IDs.")}
+    else if(idm){where.push("StudentID = '"+idm[1]+"'");notes.push("`StudentID = '"+idm[1]+"'` matches one student, because the ID is the primary key.")}
+    var sw=n.match(/(?:starts? with|begins? with|starting with|beginning with) ([a-z]) /);
+    var ct=n.match(/(?:contains?|containing) ([a-z]+) /);
+    if(sw){where.push("Name LIKE '"+sw[1].toUpperCase()+"%'");notes.push("`LIKE '"+sw[1].toUpperCase()+"%'` matches names starting with "+sw[1].toUpperCase()+". The `%` stands for any characters.")}
+    else if(ct){where.push("Name LIKE '%"+title(ct[1])+"%'");notes.push("`LIKE '%"+title(ct[1])+"%'` matches names containing that text.")}
+    else{
+      var nm=null,q=text.match(/["\u201C']([^"'\u201D]{2,40})["\u201D']/);
+      if(q&&majors.indexOf(q[1])<0&&!/^\d+$/.test(q[1]))nm=q[1];
+      if(!nm){var m2=text.match(/\b(?:named|called)\s+([A-Z][a-z]+(?:\s[A-Z][a-z]+)*)/);if(m2)nm=m2[1]}
+      if(!nm){var re=/\b([A-Z][a-z]+ [A-Z][a-z]+)\b/g,m3;while((m3=re.exec(text))){if(majors.indexOf(m3[1])<0&&!/^(Write|Give|Show|Make|Help|Add|Insert|Change|Update|Delete|Remove)\b/.test(m3[1])){nm=m3[1];break}}}
+      if(nm){where.push("Name = '"+nm+"'");notes.push("`Name = '"+nm+"'` matches that name. Text values use single quotes.")}
+    }
+    return {where:where,notes:notes,major:mj,nameVal:(function(){var x=where.filter(function(w){return w.indexOf("Name = ")===0})[0];return x?x.slice(8,-1):null})()};
+  }
+  function genSQL(text,n){
+    var S=students(),act="select";
+    if(/ (delete|remove|erase|drop) /.test(n))act="delete";
+    else if(/ (update|change|modify|edit|rename|switch) /.test(n))act="update";
+    else if(/ (add|insert|enroll|register|new student) /.test(n))act="insert";
+    else if(/ (how many|count|number of) /.test(n))act="count";
+    var out=[],notes=[],sql="";
+    if(act==="select"||act==="count"){
+      var w=parseWhere(text,n);
+      var cols="*";
+      if(act==="count")cols="COUNT(*)";
+      else if(/ (only|just|names of|list names|their names|names) /.test(n)||/ names? and majors? /.test(n)){
+        var c=[];if(/ names? /.test(n))c.push("Name");if(/ majors? /.test(n)&&!w.major)c.push("Major");if(/ ids? /.test(n))c.unshift("StudentID");
+        if(/ names and majors | name and major /.test(n)){c=["Name","Major"]}
+        if(c.length)cols=c.join(", ");
+      }
+      sql="SELECT "+cols+"\nFROM Students";
+      notes.push(cols==="*"?"`SELECT *` returns all columns.":cols==="COUNT(*)"?"`COUNT(*)` returns how many rows match (it works in real MySQL and PostgreSQL, but not in the practice SQL demo).":"`SELECT "+cols+"` returns only those columns.");
+      notes.push("`FROM Students` names the table.");
+      if(w.where.length){sql+="\nWHERE "+w.where.join(" AND ");notes=notes.concat(w.notes)}
+      if(act==="select"&&/ (sort|sorted|order|ordered|alphabetical|alphabetically) /.test(n)){
+        var col=/ major /.test(n)&&!w.major?"Major":/ id /.test(n)&&!/ id (is|=)/.test(n)&&!w.where.some(function(x){return x.indexOf("StudentID")===0})?"StudentID":"Name";
+        var desc=/ (desc|descending|reverse|z to a|backwards|backward) /.test(n);
+        sql+="\nORDER BY "+col+(desc?" DESC":"");
+        notes.push("`ORDER BY "+col+(desc?" DESC":"")+"` sorts the results"+(desc?" from Z to A.":" from A to Z."));
+      }
+      sql+=";";
+    }else if(act==="insert"){
+      var wi=parseWhere(text,n),idv=(n.match(/ (?:id|number) (?:is |= )?(\d{1,6}) /)||[])[1];
+      var next=S.reduce(function(m,s){var v=parseInt(s.id,10);return isNaN(v)?m:Math.max(m,v)},0)+1;
+      var nextId=String(next);while(nextId.length<3)nextId="0"+nextId;
+      var nameV=wi.nameVal||"Student Name",maj=wi.major||"Undeclared";
+      sql="INSERT INTO Students (StudentID, Name, Major)\nVALUES ('"+(idv||nextId)+"', '"+nameV+"', '"+maj+"');";
+      notes.push("`INSERT INTO Students (...)` lists the columns that will receive values.");
+      notes.push("`VALUES (...)` gives the data in the same order. Text values use single quotes.");
+      if(!idv)notes.push("I used `"+nextId+"` as the ID because it is the next free number in your table. IDs must be unique.");
+      if(!wi.nameVal)notes.push("Replace `Student Name` with the real name.");
+    }else if(act==="update"){
+      var idx=n.lastIndexOf(" to "),left=idx>0?n.slice(0,idx)+" ":n,right=idx>0?n.slice(idx+4).trim():"";
+      var li=text.toLowerCase().lastIndexOf(" to "),lt=li>0?text.slice(0,li):text,wu=parseWhere(lt,left);
+      var col=/ name /.test(left)&&!/ major /.test(left)?"Name":"Major",val=null;
+      knownMajors().forEach(function(m){if((" "+right+" ").indexOf(" "+m.toLowerCase()+" ")>=0)val=m});
+      if(!val&&right){var tq=text.match(/^[\s\S]*\bto\s+["']?([^"';]+?)["']?\s*$/i);val=tq?tq[1].trim():title(right)}
+      if(!val)val="New Value";
+      sql="UPDATE Students\nSET "+col+" = '"+val+"'";
+      notes.push("`UPDATE Students` says which table to change.");
+      notes.push("`SET "+col+" = '"+val+"'` is the new value.");
+      if(wu.where.length){sql+="\nWHERE "+wu.where.join(" AND ");notes.push("`WHERE` limits the change to the matching student(s).")}
+      else{sql+="\nWHERE StudentID = '001'";notes.push("I added `WHERE StudentID = '001'` as a placeholder. Without WHERE, **every row** would change, so replace 001 with the real ID.")}
+      sql+=";";
+    }else{
+      var wd=parseWhere(text,n);
+      sql="DELETE FROM Students";
+      notes.push("`DELETE FROM Students` removes rows from the table.");
+      if(wd.where.length){sql+="\nWHERE "+wd.where.join(" AND ");notes.push("`WHERE` limits the delete to the matching student(s).")}
+      else{sql+="\nWHERE StudentID = '005'";notes.push("I added `WHERE StudentID = '005'` as a placeholder. Without WHERE, **every row** would be deleted, so replace 005 with the real ID.")}
+      sql+=";";
+    }
+    out.push("Here is a query for that:");
+    out.push("SQL:"+sql);
+    out.push("**How it works:**");
+    out.push("- "+notes.join("\n- "));
+    out.push("You can paste it into the SQL demo section above and select Run SQL"+(act==="count"?" (COUNT is not supported there, so try a SELECT instead).":"."));
+    return out;
+  }
+
+  /* ---------- live data answers ---------- */
+  function liveAnswer(text,n){
+    var S=students(),parts=[],majors=knownMajors(),w=parseWhere(text,n);
+    function row(s){return s.id+": "+s.name+" ("+s.major+")"}
+    if(/ (how many|count|number of) /.test(n)){
+      if(w.major){var c=S.filter(function(s){return s.major===w.major}).length;parts.push("There "+(c===1?"is **1 student**":"are **"+c+" students**")+" in "+w.major+" in your saved table.")}
+      else parts.push("Your student table currently has **"+S.length+" record"+(S.length===1?"":"s")+"**.");
+    }
+    if(/ majors? /.test(n)&&/ (what|which|list|show|are there|different) /.test(n)&&!w.major){
+      var cnt={};S.forEach(function(s){cnt[s.major]=(cnt[s.major]||0)+1});
+      var ks=Object.keys(cnt).sort();
+      parts.push("Majors in the table:");parts.push("- "+(ks.length?ks.map(function(k){return k+" ("+cnt[k]+")"}).join("\n- "):"none yet"));
+    }
+    if(w.major&&!/ (how many|count|number of) /.test(n)){
+      var m=S.filter(function(s){return s.major===w.major});
+      parts.push(m.length?"Students in "+w.major+":":"No students are in "+w.major+" right now.");
+      if(m.length)parts.push("- "+m.map(row).join("\n- "));
+    }
+    var idm=n.match(/ (?:id|number|student) (?:is |equals |= |of )?(\d{1,6}) /);
+    if(idm){var f=S.filter(function(s){return s.id===idm[1]})[0];parts.push(f?"Student "+idm[1]+" is **"+f.name+"**, majoring in "+f.major+".":"I do not see a student with ID "+idm[1]+" in your table.")}
+    else if(w.nameVal){var g=S.filter(function(s){return s.name.toLowerCase()===w.nameVal.toLowerCase()})[0];parts.push(g?g.name+" has ID **"+g.id+"** and majors in "+g.major+".":"I do not see "+w.nameVal+" in your table.")}
+    if(!parts.length&&/ (list|show|all|who|everyone|students) /.test(n)){
+      var sw=n.match(/(?:starts? with|begins? with|starting with|beginning with) ([a-z]) /),ct=n.match(/(?:contains?|containing) ([a-z]+) /),L=S,lab="all "+S.length+" students";
+      if(sw){L=S.filter(function(s){return s.name.toLowerCase().indexOf(sw[1])===0});lab=L.length+" student"+(L.length===1?"":"s")+" whose name starts with "+sw[1].toUpperCase()}
+      else if(ct){L=S.filter(function(s){return s.name.toLowerCase().indexOf(ct[1])>=0});lab=L.length+" student"+(L.length===1?"":"s")+" whose name contains "+ct[1]}
+      parts.push(L.length?"Here are "+lab+" in your table:":"No students match that in your table.");
+      if(L.length)parts.push("- "+L.slice(0,20).map(row).join("\n- ")+(L.length>20?"\n- ...and "+(L.length-20)+" more":""));
+    }
+    if(!parts.length)return null;
+    parts.push("This comes from the records saved in your browser, so it reflects any changes you made in the table above.");
+    return parts;
+  }
+
+  /* ---------- how-to for the student table ---------- */
+  function howTo(n){
+    var a=null;
+    if(/ (add|insert|create|new) /.test(n))a=["**Add a student:** select **Add student** above the table, fill in a unique ID, a name, and a major, then select **Save student**.","SQL:INSERT INTO Students (StudentID, Name, Major)\nVALUES ('006', 'Sara Lopez', 'Computer Science');"];
+    else if(/ (edit|update|change|modify) /.test(n))a=["**Edit a student:** select **Edit** on that row, change the name or major, and select **Save student**. The ID is the primary key, so it cannot be changed.","SQL:UPDATE Students\nSET Major = 'Data Science'\nWHERE StudentID = '001';"];
+    else if(/ (delete|remove) /.test(n))a=["**Delete a student:** select **Delete** on that row and confirm in the popup. Choose Keep record to cancel.","SQL:DELETE FROM Students\nWHERE StudentID = '005';"];
+    else if(/ (search|find) /.test(n))a=["**Search:** type in the search box. It matches the name, ID, or major as you type.","SQL:SELECT * FROM Students\nWHERE Name LIKE '%john%';"];
+    else if(/ (sort|order) /.test(n))a=["**Sort:** select the Student ID, Name, or Major heading. Select it again to reverse the order.","SQL:SELECT * FROM Students\nORDER BY Name;"];
+    else if(/ filter /.test(n))a=["**Filter:** use the Filter by major dropdown to show only one major.","SQL:SELECT * FROM Students\nWHERE Major = 'Cybersecurity';"];
+    if(!a)return null;
+    a.splice(1,0,"The equivalent SQL statement is:");
+    return a;
+  }
+
+  /* ---------- main responder ---------- */
+  var SUGG=["What is a DBMS?","Difference between primary key and foreign key","Write a query to show students majoring in Data Science sorted by name","SQL vs NoSQL?","Why do I get a duplicate entry error?","How many students are in my table?","SELECT * FORM Students","Explain one-to-many relationships"];
+  function local(text){
+    var n=norm(text);
+    if(/^ (hi|hello|hey|yo|good morning|good afternoon|good evening|greetings) ?(there|helper)? $/.test(n)||/^ (hi|hello|hey) /.test(n)&&n.split(" ").length<6)
+      return ["Hello! I am the DB Helper. Ask me about databases, SQL, keys, relationships, or the student table on this page. For example: \"Write a query to show students majoring in Data Science\"."];
+    if(/ (thanks|thank you|thx|ty) /.test(n))return ["You are welcome! Ask me anything else about databases or SQL."];
+    if(/^ (bye|goodbye|see you) /.test(n))return ["Goodbye! Good luck with your database studies."];
+    /* pasted SQL */
+    var sql=extractSQL(text);
+    if(sql&&(/^\s*(select|insert|update|delete|create|selct|slect|selet|insrt|inset|isert|delet|updat|upate)\b/i.test(sql))&&sql.split(/\s+/).length>=2&&!/^ (what|how|why|when|which|explain|difference)/.test(n))
+      return sqlCheck(sql);
+    for(var i=0;i<ERR.length;i++)if(ERR[i][0].test(n.trim()))return ERR[i][1];
+    var sqlWords=/ (sql|query|queries|statement) /.test(n),verbs=/ (write|generate|build|make|give|show|need|help|create|produce|how do i|how can i|how to) /.test(n);
+    var studentCtx=/ (student|students|record|records|major|majors) /.test(n);
+    var explainOnly=/ (what is|what are|what does|explain|difference|meaning|define) /.test(n)&&!/ (write|generate|build|give|show me|make) /.test(n);
+    if(!explainOnly&&sqlWords&&verbs&&(studentCtx||/ (select|insert|update|delete|add|remove|change|count|sort) /.test(n)))return genSQL(text,n);
+    var ht=/ (how do i|how can i|how to|how would i|how do you) /.test(n)&&/ (student|students|record|records|row|table) /.test(n)&&!sqlWords?howTo(n):null;
+    if(ht)return ht;
+    var liveIntent=/ (how many|count|number of|list|who|which|is there|are there|do we have|what majors|all students|any students|currently|show) /.test(n)&&/ (student|students|record|records|table|majors?) /.test(n)&&!sqlWords&&!explainOnly&&!/ how (do|can|to) /.test(n);
+    var inMine=/ (my|in table|in database|current|currently|saved) /.test(n)||/ (how many|list|who|show|all students|is there|are there) /.test(n);
+    if(liveIntent){var la=liveAnswer(text,n);if(la)return la}
+    var kb=kbAnswer(n);
+    if(kb)return kb;
+    if(studentCtx&&/ (add|insert|delete|remove|update|change|find|list|show|count|get) /.test(n))return genSQL(text,n);
+    return ["I am not sure I understood that. I can explain databases, DBMS, tables, keys, relationships, SQL commands, SQL vs NoSQL, and common errors. I can also write basic SQL, check a statement, and answer questions about the student table.","Try rephrasing, or ask something like:","- \"What is a foreign key?\"\n- \"Write SQL to add a student named Sara Lopez\"\n- \"How do I delete a record?\""];
+  }
+  window.__dbBot=local;
+
+  /* ---------- chat UI ---------- */
+  var log=$("chatLog"),input=$("chatIn");
+  function addMsg(role,html,cls){
+    var d=document.createElement("div");d.className="msg "+role+(cls?" "+cls:"");
+    d.innerHTML='<span class="who">'+(role==="bot"?"DB Helper":"You")+"</span>"+html;
+    log.appendChild(d);log.scrollTop=log.scrollHeight;return d;
+  }
+  function reply(text,done){
+    var t=addMsg("bot","Thinking...","typing");
+    function show(blocks){t.className="msg bot";t.innerHTML='<span class="who">DB Helper</span>'+fmt(blocks);log.scrollTop=log.scrollHeight;if(done)done()}
+    if(AI_PROXY_URL){
+      fetch(AI_PROXY_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({message:text})})
+        .then(function(r){return r.json()}).then(function(d){show(d&&d.reply?[String(d.reply)]:local(text))})
+        .catch(function(){show(local(text))});
+    }else setTimeout(function(){show(local(text))},350);
+  }
+  function send(text){text=text.trim();if(!text)return;addMsg("user",esc(text));reply(text)}
+  function intro(){
+    addMsg("bot",fmt(["Hi! I am the DB Helper. I can explain database concepts, write and check basic SQL, explain errors, and answer questions about the student table above.","Pick a suggestion below or type your own question."]));
+  }
+  $("chatForm").addEventListener("submit",function(e){e.preventDefault();var v=input.value;input.value="";send(v);input.focus()});
+  $("clearBtn").onclick=function(){log.innerHTML="";intro()};
+  var chips=$("chips");
+  SUGG.forEach(function(s){var b=document.createElement("button");b.type="button";b.textContent=s.length>44?s.slice(0,41)+"...":s;b.title=s;b.onclick=function(){send(s)};chips.appendChild(b)});
+  $("testBtn").onclick=function(){
+    var i=0;(function next(){if(i>=SUGG.length)return;var q=SUGG[i++];addMsg("user",esc(q));reply(q,function(){setTimeout(next,250)})})();
+  };
+  intro();
 })();
 </script>
 
